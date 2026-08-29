@@ -19,7 +19,7 @@ use CodeIgniter\Database\BaseConnection;
  */
 class StoredProcedure
 {
-    /** @param BaseConnection<mysqli, mysqli_result> $db */
+    /** @param BaseConnection<\mysqli, \mysqli_result> $db */
     public function __construct(private readonly BaseConnection $db)
     {
     }

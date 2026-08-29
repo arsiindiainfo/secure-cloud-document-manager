@@ -11,14 +11,12 @@
     failOnWarning="true"
     cacheDirectory="build/.phpunit.cache"
 >
-    <coverage pathCoverage="false" ignoreDeprecatedCodeUnits="true">
-        <report>
-            <clover outputFile="build/logs/clover.xml"/>
-            <html outputDirectory="build/logs/html"/>
-            <php outputFile="build/logs/coverage.serialized"/>
-            <text outputFile="php://stdout" showUncoveredFiles="false"/>
-        </report>
-    </coverage>
+    <!--
+        No coverage driver (Xdebug/PCOV) is available on this host's shared
+        PHP install, and installing one there is out of scope for this repo.
+        Phase 5's CI workflow runs PHPUnit inside a Docker PHP image with
+        PCOV installed and requests coverage output flags explicitly there.
+    -->
 
     <testsuites>
         <testsuite name="App">
