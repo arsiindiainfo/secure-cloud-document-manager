@@ -1,0 +1,103 @@
+name: secure-cloud-document-manager
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: scdm
+      MYSQL_USER: scdm
+      MYSQL_PASSWORD: scdm
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  localstack:
+    image: localstack/localstack:3.8
+    restart: unless-stopped
+    environment:
+      SERVICES: s3,lambda,events
+      DEFAULT_REGION: us-east-1
+      DOCUMENTS_BUCKET: scdm-documents-local
+      SPA_BUCKET: scdm-spa-local
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - ./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: unless-stopped
+    ports:
+      - "1026:1025" # SMTP — user-invite emails land here in dev
+      - "8026:8025" # Web UI
+
+  api:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      CI_ENVIRONMENT: development
+      app.baseURL: "http://localhost:8080/"
+      database.default.hostname: mysql
+      database.default.database: scdm
+      database.default.username: scdm
+      database.default.password: scdm
+      database.default.DBDriver: MySQLi
+      database.default.port: "3306"
+      database.tests.hostname: mysql
+      database.tests.database: scdm_test
+      database.tests.username: scdm
+      database.tests.password: scdm
+      database.tests.DBDriver: MySQLi
+      database.tests.port: "3306"
+      # Dev-only secrets — never used outside this local Docker stack.
+      auth.jwtSecret: "local-dev-jwt-secret-do-not-use-in-production"
+      auth.accessTokenTtl: "900"
+      auth.refreshTokenTtl: "1209600"
+      auth.internalHmacSecret: "local-dev-hmac-secret-do-not-use-in-production"
+      aws.region: us-east-1
+      aws.endpoint: "http://localstack:4566"
+      aws.key: test
+      aws.secret: test
+      aws.documentsBucket: scdm-documents-local
+      aws.spaBucket: scdm-spa-local
+      aws.presignTtlSeconds: "300"
+      email.SMTPHost: mailhog
+      email.SMTPPort: "1025"
+      email.protocol: smtp
+
+  web:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+
+volumes:
+  mysql-data:
+  localstack-data:

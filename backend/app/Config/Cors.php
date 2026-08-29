@@ -28,13 +28,14 @@ class Cors extends BaseConfig
         /**
          * Origins for the `Access-Control-Allow-Origin` header.
          *
-         * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
-         *
-         * E.g.:
-         *   - ['http://localhost:8080']
-         *   - ['https://www.example.com']
+         * §5 "CORS allow-list" — Vite dev server (5173) and the built SPA
+         * container (3000) locally; a real deploy would list the CloudFront
+         * domain instead. Never a wildcard, since supportsCredentials is on.
          */
-        'allowedOrigins' => [],
+        'allowedOrigins' => [
+            'http://localhost:5173',
+            'http://localhost:3000',
+        ],
 
         /**
          * Origin regex patterns for the `Access-Control-Allow-Origin` header.
@@ -57,7 +58,7 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
          */
-        'supportsCredentials' => false,
+        'supportsCredentials' => true,
 
         /**
          * Set headers to allow.
@@ -68,7 +69,7 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
          */
-        'allowedHeaders' => [],
+        'allowedHeaders' => ['Content-Type', 'Authorization', 'X-Signature', 'X-Request-Id'],
 
         /**
          * Set headers to expose.
@@ -93,7 +94,7 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
          */
-        'allowedMethods' => [],
+        'allowedMethods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
         /**
          * Set how many seconds the results of a preflight request can be cached.

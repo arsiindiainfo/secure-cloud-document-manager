@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Exceptions\ValidationException;
+use App\Traits\ApiResponseTrait;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -20,6 +22,30 @@ use Psr\Log\LoggerInterface;
  */
 abstract class BaseController extends Controller
 {
+    use ApiResponseTrait;
+
+    /**
+     * Runs the named §5 rule group and returns the validated data. Every
+     * Controller action calls this before touching a Service — no
+     * unvalidated input reaches business logic.
+     *
+     * @return array<string, mixed>
+     */
+    protected function validated(string $ruleGroup): array
+    {
+        $input = $this->request->getJSON(true) ?? $this->request->getPost();
+
+        if (! $this->validateData($input, $ruleGroup)) {
+            $details = [];
+            foreach ($this->validator->getErrors() as $field => $message) {
+                $details[] = ['field' => $field, 'message' => $message];
+            }
+
+            throw new ValidationException($details);
+        }
+
+        return $input;
+    }
     /**
      * Be sure to declare properties for any property fetch you initialized.
      * The creation of dynamic property is deprecated in PHP 8.2.

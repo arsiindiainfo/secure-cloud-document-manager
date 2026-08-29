@@ -2,6 +2,7 @@
 
 namespace Config;
 
+use App\Libraries\AuthContext;
 use CodeIgniter\Config\BaseService;
 
 /**
@@ -19,14 +20,12 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
-    /*
-     * public static function example($getShared = true)
-     * {
-     *     if ($getShared) {
-     *         return static::getSharedInstance('example');
-     *     }
-     *
-     *     return new \CodeIgniter\Example();
-     * }
-     */
+    public static function authContext(bool $getShared = true): AuthContext
+    {
+        if ($getShared) {
+            return static::getSharedInstance('authContext');
+        }
+
+        return new AuthContext();
+    }
 }

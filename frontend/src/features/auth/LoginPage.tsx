@@ -1,0 +1,97 @@
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
+import { isAxiosError } from 'axios';
+import { useAuth } from './AuthContext';
+import type { ApiErrorResponse } from '../../types/api';
+
+// Mirrors the backend's `authLogin` rule group (§5, §23) — the same shape
+// is validated client- and server-side.
+const loginSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+
+export function LoginPage() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+
+  async function onSubmit(values: LoginForm) {
+    setServerError(null);
+    try {
+      await login(values.email, values.password);
+      navigate('/', { replace: true });
+    } catch (err) {
+      const message = isAxiosError<ApiErrorResponse>(err)
+        ? err.response?.data.error.message
+        : undefined;
+      setServerError(message ?? 'Invalid email or password');
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
+      <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
+          Secure Cloud Document Manager
+        </h1>
+        <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">Sign in to your workspace</p>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <div>
+            <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Email <span aria-hidden>*</span>
+            </label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="username"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              {...register('email')}
+            />
+            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
+          </div>
+
+          <div>
+            <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Password <span aria-hidden>*</span>
+            </label>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              {...register('password')}
+            />
+            {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
+          </div>
+
+          {serverError && (
+            <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+              {serverError}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+          >
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}

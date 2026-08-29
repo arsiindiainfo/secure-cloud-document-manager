@@ -39,6 +39,28 @@ class Validation extends BaseConfig
     ];
 
     // --------------------------------------------------------------------
-    // Rules
+    // Rules (§5 "Every endpoint declares a named rule group" — one group
+    // per endpoint, named after it; Controllers call $this->validateData()
+    // against these before ever touching a Service).
     // --------------------------------------------------------------------
+
+    public array $authLogin = [
+        'email'    => 'required|valid_email',
+        'password' => 'required',
+    ];
+
+    public array $authRefresh = [
+        'refreshToken' => 'required|string',
+    ];
+
+    public array $usersInvite = [
+        'name'  => 'required|min_length[2]|max_length[120]',
+        'email' => 'required|valid_email|is_unique[users.email]',
+        'role'  => 'required|in_list[ADMIN,MANAGER,EMPLOYEE]',
+    ];
+
+    public array $usersUpdate = [
+        'role'   => 'permit_empty|in_list[ADMIN,MANAGER,EMPLOYEE]',
+        'status' => 'permit_empty|in_list[ACTIVE,DISABLED]',
+    ];
 }

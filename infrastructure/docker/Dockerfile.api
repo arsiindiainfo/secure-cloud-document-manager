@@ -1,0 +1,25 @@
+# Local-development image for the CodeIgniter 4 API.
+# Uses PHP's built-in server via `spark serve` rather than PHP-FPM + nginx —
+# simplest reliable option for `docker compose up` local dev; production
+# deployment (out of scope for this build) would front this with PHP-FPM/nginx.
+# Build context is the repo root (see infrastructure/docker-compose.yml).
+FROM php:8.2-cli
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git unzip libzip-dev libicu-dev libonig-dev \
+    && docker-php-ext-install intl mysqli zip pdo_mysql \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/backend
+
+COPY backend/composer.json backend/composer.lock ./
+RUN composer install --no-interaction --no-scripts --no-progress
+
+COPY backend/. .
+RUN composer dump-autoload --optimize
+
+EXPOSE 8080
+
+CMD ["php", "spark", "serve", "--host", "0.0.0.0", "--port", "8080"]
