@@ -44,7 +44,7 @@ class UsersService
      */
     public function list(int $page, int $limit): array
     {
-        $total = $this->users->countAll();
+        $total = $this->users->countAllResults();
         $items = $this->users->orderBy('created_at', 'desc')->findAll($limit, ($page - 1) * $limit);
 
         return ['items' => $items, 'total' => $total];

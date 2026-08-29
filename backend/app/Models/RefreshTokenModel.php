@@ -28,11 +28,12 @@ class RefreshTokenModel extends Model
     /** @return array{id: int, userId: int}|null valid + unrevoked + unexpired */
     public function findActiveByToken(string $token): ?array
     {
-        $row = $this->where('token_hash', hash('sha256', $token))
+        $row = $this->builder()
+            ->where('token_hash', hash('sha256', $token))
             ->where('revoked_at', null)
             ->where('expires_at >', date('Y-m-d H:i:s'))
-            ->asArray()
-            ->first();
+            ->get()
+            ->getRowArray();
 
         return $row === null ? null : ['id' => (int) $row['id'], 'userId' => (int) $row['user_id']];
     }

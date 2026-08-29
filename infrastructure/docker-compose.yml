@@ -56,10 +56,13 @@ services:
       localstack:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      # Host 8082, not 8080 — many dev machines already have something
+      # (XAMPP, IIS, another project) bound to 8080. The container's own
+      # internal port stays 8080 either way.
+      - "8082:8080"
     environment:
       CI_ENVIRONMENT: development
-      app.baseURL: "http://localhost:8080/"
+      app.baseURL: "http://localhost:8082/"
       database.default.hostname: mysql
       database.default.database: scdm
       database.default.username: scdm
@@ -87,6 +90,10 @@ services:
       email.SMTPHost: mailhog
       email.SMTPPort: "1025"
       email.protocol: smtp
+      # Mailhog doesn't speak STARTTLS — leave crypto empty.
+      email.SMTPCrypto: ""
+      email.fromEmail: no-reply@arsiindiainfo.local
+      email.fromName: "Secure Cloud Document Manager"
 
   web:
     build:

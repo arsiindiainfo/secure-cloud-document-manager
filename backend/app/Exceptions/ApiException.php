@@ -3,17 +3,24 @@
 namespace App\Exceptions;
 
 use CodeIgniter\Exceptions\HTTPExceptionInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use CodeIgniter\HTTP\ResponsableInterface;
 use RuntimeException;
 
 /**
  * Base of every typed exception in the app. Carries the HTTP status and
- * machine-readable error code the global exception handler needs to build
- * the standard error envelope (§13.3, §14) — no call site ever builds that
- * envelope by hand. Implements HTTPExceptionInterface so CodeIgniter's own
- * Debug\Exceptions dispatcher reads the HTTP status straight off getCode()
- * before handing off to our ApiExceptionHandler (Config\Exceptions::handler()).
+ * machine-readable error code needed to build the standard error envelope
+ * (§13.3, §14) — no call site ever builds that envelope by hand.
+ *
+ * Implements ResponsableInterface (not just HTTPExceptionInterface) because
+ * CodeIgniter\CodeIgniter::run() only specially catches ResponsableInterface
+ * and PageNotFoundException inline — everything else re-throws past the
+ * request cycle to PHP's global exception handler, which isn't installed in
+ * FeatureTestTrait's test context. getResponse() here is what lets a thrown
+ * ApiException turn into a normal envelope response in both real requests
+ * and feature tests, not just production.
  */
-class ApiException extends RuntimeException implements HTTPExceptionInterface
+class ApiException extends RuntimeException implements HTTPExceptionInterface, ResponsableInterface
 {
     private readonly int $httpStatus;
 
@@ -42,5 +49,19 @@ class ApiException extends RuntimeException implements HTTPExceptionInterface
     public function getDetails(): ?array
     {
         return $this->details;
+    }
+
+    public function getResponse(): ResponseInterface
+    {
+        $body = [
+            'success' => false,
+            'error'   => array_filter([
+                'code'    => $this->errorCode,
+                'message' => $this->getMessage(),
+                'details' => $this->details,
+            ], static fn ($value) => $value !== null),
+        ];
+
+        return service('response')->setStatusCode($this->httpStatus)->setJSON($body);
     }
 }

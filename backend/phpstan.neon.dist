@@ -1,0 +1,16 @@
+includes:
+    - vendor/codeigniter/phpstan-codeigniter/extension.neon
+
+parameters:
+    level: 6
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    paths:
+        - app
+    excludePaths:
+        - app/Views
+        # References Kint's optional plugin interfaces; Kint itself isn't a
+        # dependency of this project (debug-only tool, not installed).
+        - app/Config/Kint.php
+    tmpDir: build/phpstan
+    reportUnmatchedIgnoredErrors: false

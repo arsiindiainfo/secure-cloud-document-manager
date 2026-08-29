@@ -2,7 +2,7 @@
 
 namespace App\Libraries;
 
-use CodeIgniter\Database\ConnectionInterface;
+use CodeIgniter\Database\BaseConnection;
 
 /**
  * Every write in this app goes through `CALL sp_xxx(...)` with bound IN
@@ -19,7 +19,8 @@ use CodeIgniter\Database\ConnectionInterface;
  */
 class StoredProcedure
 {
-    public function __construct(private readonly ConnectionInterface $db)
+    /** @param BaseConnection<mysqli, mysqli_result> $db */
+    public function __construct(private readonly BaseConnection $db)
     {
     }
 

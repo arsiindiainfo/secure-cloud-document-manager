@@ -44,21 +44,25 @@ class Validation extends BaseConfig
     // against these before ever touching a Service).
     // --------------------------------------------------------------------
 
+    /** @var array<string, string> */
     public array $authLogin = [
         'email'    => 'required|valid_email',
         'password' => 'required',
     ];
 
+    /** @var array<string, string> */
     public array $authRefresh = [
         'refreshToken' => 'required|string',
     ];
 
+    /** @var array<string, string> */
     public array $usersInvite = [
         'name'  => 'required|min_length[2]|max_length[120]',
         'email' => 'required|valid_email|is_unique[users.email]',
         'role'  => 'required|in_list[ADMIN,MANAGER,EMPLOYEE]',
     ];
 
+    /** @var array<string, string> */
     public array $usersUpdate = [
         'role'   => 'permit_empty|in_list[ADMIN,MANAGER,EMPLOYEE]',
         'status' => 'permit_empty|in_list[ACTIVE,DISABLED]',

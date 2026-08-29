@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8f5461b080be4cc66a5cda803b136edd",
+    "content-hash": "f30187be3b2f3085a168309a44e3249e",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -2481,6 +2481,78 @@
                 }
             ],
             "time": "2022-12-23T10:58:28+00:00"
+        },
+        {
+            "name": "codeigniter/phpstan-codeigniter",
+            "version": "v1.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CodeIgniter/phpstan-codeigniter.git",
+                "reference": "509c7e3c6a63e082b00be6e948e4d79a66ce6eb3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CodeIgniter/phpstan-codeigniter/zipball/509c7e3c6a63e082b00be6e948e4d79a66ce6eb3",
+                "reference": "509c7e3c6a63e082b00be6e948e4d79a66ce6eb3",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2",
+                "phpstan/phpstan": "^2.0"
+            },
+            "conflict": {
+                "codeigniter/framework": "*"
+            },
+            "require-dev": {
+                "codeigniter/coding-standard": "^1.7",
+                "codeigniter4/framework": "^4.6.2",
+                "codeigniter4/shield": "^1.0",
+                "friendsofphp/php-cs-fixer": "^3.49",
+                "nexusphp/cs-config": "^3.21",
+                "phpstan/extension-installer": "^1.3",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^10.5 || ^11.4"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "phpstan": {
+                    "includes": [
+                        "extension.neon"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CodeIgniter\\PHPStan\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "John Paul E. Balandan, CPA",
+                    "email": "paulbalandan@gmail.com"
+                }
+            ],
+            "description": "CodeIgniter extensions and rules for PHPStan",
+            "keywords": [
+                "PHPStan",
+                "codeigniter",
+                "codeigniter4",
+                "dev",
+                "static analysis"
+            ],
+            "support": {
+                "forum": "http://forum.codeigniter.com/",
+                "issues": "https://github.com/CodeIgniter/phpstan-codeigniter/issues",
+                "slack": "https://codeigniterchat.slack.com",
+                "source": "https://github.com/CodeIgniter/phpstan-codeigniter"
+            },
+            "time": "2026-06-15T08:26:06+00:00"
         },
         {
             "name": "composer/pcre",
