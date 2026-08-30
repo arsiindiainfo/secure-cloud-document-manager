@@ -1,26 +1,17 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { apiClient } from '../../lib/apiClient';
 import { tokenStore } from '../../lib/tokenStore';
 import type { ApiSuccess, User } from '../../types/api';
-
-interface AuthContextValue {
-  user: User | null;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext } from './context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // No token means nothing to check — start already "loaded" rather than
+  // flipping isLoading to false synchronously inside the effect below.
+  const [isLoading, setIsLoading] = useState(() => tokenStore.getAccessToken() !== null);
 
   useEffect(() => {
-    if (!tokenStore.getAccessToken()) {
-      setIsLoading(false);
-      return;
-    }
+    if (!tokenStore.getAccessToken()) return;
 
     apiClient
       .get<ApiSuccess<User>>('/users/me')
@@ -48,10 +39,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return <AuthContext.Provider value={{ user, isLoading, login, logout }}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
-  return ctx;
 }

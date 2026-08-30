@@ -1,0 +1,13 @@
+# Build context is the repo root (infrastructure/docker-compose.yml) —
+# without this, ~100MB+ of already-reinstalled dependencies and local-only
+# files get uploaded to the Docker daemon on every build.
+**/vendor
+**/node_modules
+**/writable/cache/*
+**/writable/logs/*
+**/writable/session/*
+**/writable/debugbar/*
+**/dist
+**/.env
+**/*.log
+.git

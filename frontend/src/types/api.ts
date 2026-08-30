@@ -44,3 +44,57 @@ export interface User {
   role: Role;
   status: UserStatus;
 }
+
+export interface Folder {
+  id: number;
+  parentFolderId: number | null;
+  name: string;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface Document {
+  id: number;
+  folderId: number;
+  name: string;
+  description: string | null;
+  tags: string[];
+  currentVersion: number;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface DocumentVersion {
+  id: number;
+  documentId: number;
+  versionNo: number;
+  mimeType: string;
+  sizeBytes: number;
+  checksumSha256: string;
+  hasThumbnail: boolean;
+  isCurrent: boolean;
+  uploadedBy: number;
+  uploadedAt: string;
+}
+
+export interface BreadcrumbEntry {
+  id: number;
+  name: string;
+}
+
+export interface FolderChildren {
+  folders: Folder[];
+  documents: Document[];
+  breadcrumb: BreadcrumbEntry[];
+}
+
+export type Permission = 'VIEWER' | 'EDITOR' | 'OWNER';
+
+export interface DocumentDetail extends Document {
+  currentVersionDetail: DocumentVersion | null;
+  effectivePermission: Permission;
+}

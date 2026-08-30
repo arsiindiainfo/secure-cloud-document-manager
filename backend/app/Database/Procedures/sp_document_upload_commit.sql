@@ -37,6 +37,12 @@ sp_document_upload_commit: BEGIN
     VALUES (p_document_id, 1, p_s3_bucket, p_s3_key, p_mime_type, p_size_bytes, p_checksum, 1, p_created_by);
   SET p_version_id = LAST_INSERT_ID();
 
+  -- the uploader is auto-granted OWNER on the document itself (§6.3) —
+  -- explicit, not just inherited from the folder, so it survives a later
+  -- move or a folder-level grant change
+  INSERT INTO document_permissions (document_id, user_id, permission, granted_by)
+    VALUES (p_document_id, p_created_by, 'OWNER', p_created_by);
+
   INSERT INTO document_processing_jobs (document_version_id, status) VALUES (p_version_id, 'PENDING');
 
   INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details)

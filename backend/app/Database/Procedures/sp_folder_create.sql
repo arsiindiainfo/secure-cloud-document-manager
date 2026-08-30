@@ -35,6 +35,10 @@ sp_folder_create: BEGIN
   INSERT INTO folders (name, parent_folder_id, created_by)
     VALUES (p_name, p_parent_folder_id, p_created_by);
   SET p_folder_id = LAST_INSERT_ID();
+  -- the creator is auto-granted OWNER (§6.3) — this is the only grant a
+  -- folder gets until Phase 3's sharing endpoints exist
+  INSERT INTO document_permissions (folder_id, user_id, permission, granted_by)
+    VALUES (p_folder_id, p_created_by, 'OWNER', p_created_by);
   INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details)
     VALUES (p_created_by, 'FOLDER_CREATED', 'FOLDER', p_folder_id, JSON_OBJECT('name', p_name));
   COMMIT;

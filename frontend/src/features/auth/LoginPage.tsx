@@ -3,9 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { isAxiosError } from 'axios';
-import { useAuth } from './AuthContext';
-import type { ApiErrorResponse } from '../../types/api';
+import { useAuth } from './useAuth';
+import { apiErrorMessage } from '../../lib/apiError';
 
 // Mirrors the backend's `authLogin` rule group (§5, §23) — the same shape
 // is validated client- and server-side.
@@ -33,10 +32,7 @@ export function LoginPage() {
       await login(values.email, values.password);
       navigate('/', { replace: true });
     } catch (err) {
-      const message = isAxiosError<ApiErrorResponse>(err)
-        ? err.response?.data.error.message
-        : undefined;
-      setServerError(message ?? 'Invalid email or password');
+      setServerError(apiErrorMessage(err, 'Invalid email or password'));
     }
   }
 

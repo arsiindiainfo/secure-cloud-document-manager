@@ -1,4 +1,4 @@
-import { useAuth } from '../auth/AuthContext';
+import { useAuth } from '../auth/useAuth';
 
 // Placeholder landing page for Phase 0 — the real Dashboard (§22.2: recent
 // documents, storage summary, shared-folder quick links) is built in Phase 5.
