@@ -23,6 +23,12 @@ export function FolderBrowserPage() {
   const folderId = folderIdParam ? Number(folderIdParam) : null;
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (searchQuery.trim() !== '') navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+  }
 
   const { data, isLoading, isError } = useFolderChildren(folderId);
   const createFolder = useCreateFolder(folderId);
@@ -53,6 +59,22 @@ export function FolderBrowserPage() {
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-800">
         <Breadcrumbs entries={data?.breadcrumb ?? []} />
         <div className="flex items-center gap-3">
+          <form onSubmit={handleSearchSubmit}>
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search documents…"
+              className="w-48 rounded-md border border-slate-300 px-2.5 py-1.5 text-xs dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </form>
+          {user?.role === 'ADMIN' && (
+            <button
+              onClick={() => navigate('/admin/audit-log')}
+              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              Audit log
+            </button>
+          )}
           <span className="text-xs text-slate-500 dark:text-slate-400">{user?.name}</span>
           <button
             onClick={() => void logout()}

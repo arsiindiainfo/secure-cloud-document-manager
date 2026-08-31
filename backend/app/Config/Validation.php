@@ -127,4 +127,27 @@ class Validation extends BaseConfig
         'tags'        => 'permit_empty|max_length[255]',
         'folderId'    => 'permit_empty|is_natural_no_zero',
     ];
+
+    /** @var array<string, string> */
+    public array $permissionGrant = [
+        'email'      => 'required|valid_email',
+        'permission' => 'required|in_list[VIEWER,EDITOR,OWNER]',
+    ];
+
+    // expiresInHours max 168 = 7 days (§18 "max 7 days for the demo").
+    /** @var array<string, string> */
+    public array $shareLinkCreate = [
+        'permission'     => 'required|in_list[VIEW,DOWNLOAD]',
+        'expiresInHours' => 'required|is_natural_no_zero|less_than_equal_to[168]',
+        'maxDownloads'   => 'permit_empty|is_natural_no_zero|less_than_equal_to[1000]',
+    ];
+
+    /** @var array<string, string> */
+    public array $processingCallback = [
+        's3Key'          => 'required|string',
+        'status'         => 'required|in_list[COMPLETED,FAILED]',
+        'scanResult'     => 'permit_empty|in_list[CLEAN,FLAGGED]',
+        'thumbnailS3Key' => 'permit_empty|string',
+        'errorMessage'   => 'permit_empty|max_length[500]',
+    ];
 }

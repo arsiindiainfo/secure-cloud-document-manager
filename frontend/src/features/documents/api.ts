@@ -80,3 +80,20 @@ export async function fetchVersions(documentId: number): Promise<DocumentVersion
   const { data } = await apiClient.get<ApiSuccess<DocumentVersion[]>>(`/documents/${documentId}/versions`);
   return data.data;
 }
+
+export interface PresignedUrlResult {
+  url: string;
+  expiresIn: number;
+}
+
+export async function fetchDownloadUrl(documentId: number, versionId?: number): Promise<PresignedUrlResult> {
+  const { data } = await apiClient.get<ApiSuccess<PresignedUrlResult>>(`/documents/${documentId}/download`, {
+    params: versionId ? { versionId } : undefined,
+  });
+  return data.data;
+}
+
+export async function fetchPreviewUrl(documentId: number): Promise<PresignedUrlResult> {
+  const { data } = await apiClient.get<ApiSuccess<PresignedUrlResult>>(`/documents/${documentId}/preview`);
+  return data.data;
+}

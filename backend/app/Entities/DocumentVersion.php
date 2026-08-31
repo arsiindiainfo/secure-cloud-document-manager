@@ -25,7 +25,7 @@ class DocumentVersion extends Entity
         'document_id' => 'integer',
         'version_no'  => 'integer',
         'size_bytes'  => 'integer',
-        'is_current'  => 'intbool',
+        'is_current'  => 'int-bool',
         'uploaded_by' => 'integer',
     ];
 

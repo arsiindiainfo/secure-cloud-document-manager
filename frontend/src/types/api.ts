@@ -94,7 +94,36 @@ export interface FolderChildren {
 
 export type Permission = 'VIEWER' | 'EDITOR' | 'OWNER';
 
+export type ProcessingStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
 export interface DocumentDetail extends Document {
   currentVersionDetail: DocumentVersion | null;
   effectivePermission: Permission;
+  processingStatus: ProcessingStatus | null;
+}
+
+export interface DocumentSearchResult {
+  id: number;
+  name: string;
+  description: string | null;
+  tags: string[];
+  folderId: number;
+  folderName: string;
+  currentVersion: number;
+  mimeType: string;
+  sizeBytes: number;
+  hasThumbnail: boolean;
+  createdBy: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuditLogEntry {
+  id: number;
+  userId: number | null;
+  action: string;
+  entityType: 'DOCUMENT' | 'FOLDER' | 'USER' | 'SHARE_LINK';
+  entityId: number;
+  details: Record<string, unknown> | null;
+  createdAt: string;
 }

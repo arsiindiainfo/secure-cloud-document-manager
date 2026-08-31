@@ -20,6 +20,13 @@ final class FileTypes
 
     public const MAX_UPLOAD_SIZE_BYTES = 25 * 1024 * 1024;
 
+    /** §22.4 — inline preview for PDF/image; DOCX/XLSX/ZIP fall back to a thumbnail or download-only. */
+    public const INLINE_PREVIEWABLE_MIME_TYPES = [
+        'application/pdf',
+        'image/png',
+        'image/jpeg',
+    ];
+
     public const EXTENSION_BY_MIME_TYPE = [
         'application/pdf'                                                          => 'pdf',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'   => 'docx',

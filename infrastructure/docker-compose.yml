@@ -27,11 +27,19 @@ services:
       DEFAULT_REGION: us-east-1
       DOCUMENTS_BUCKET: scdm-documents-local
       SPA_BUCKET: scdm-spa-local
+      # §9.3 — the Lambda worker calls back into the api container by
+      # service name; it must join the same compose network to resolve it.
+      # Must match the network compose derives from `name:` above.
+      LAMBDA_DOCKER_NETWORK: secure-cloud-document-manager_default
+      API_CALLBACK_URL: http://api:8080/api/v1/internal/processing-callback
+      INTERNAL_HMAC_SECRET: local-dev-hmac-secret-do-not-use-in-production
     ports:
       - "4566:4566"
     volumes:
       - localstack-data:/var/lib/localstack
       - ./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+      - ./aws/lambda/processing-worker:/opt/code/processing-worker:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
       interval: 5s

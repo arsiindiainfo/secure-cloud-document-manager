@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\DTOs\PaginationRequestDTO;
 use App\Services\DocumentService;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -10,6 +11,18 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 class DocumentsController extends BaseController
 {
+    /** §17/§24 — GET /documents, backed by sp_document_search (FULLTEXT). */
+    public function index(): ResponseInterface
+    {
+        $pagination = PaginationRequestDTO::fromRequest($this->request, ['name', 'size', 'updatedAt'], 'updatedAt');
+        $folderId   = $this->request->getGet('folderId');
+        $mimeType   = $this->request->getGet('mimeType');
+
+        $result = (new DocumentService())->search($pagination, $folderId !== null ? (int) $folderId : null, $mimeType ?: null);
+
+        return $this->paginated($result['items'], $result['meta']);
+    }
+
     public function initiateUpload(): ResponseInterface
     {
         $data = $this->validated('uploadInitiate');
@@ -99,5 +112,28 @@ class DocumentsController extends BaseController
         $versions = (new DocumentService())->listVersions($id);
 
         return $this->ok($versions);
+    }
+
+    public function download(int $id): ResponseInterface
+    {
+        $versionId = $this->request->getGet('versionId');
+
+        $result = (new DocumentService())->getDownloadUrl($id, $versionId !== null ? (int) $versionId : null);
+
+        return $this->ok($result);
+    }
+
+    public function preview(int $id): ResponseInterface
+    {
+        $result = (new DocumentService())->getPreviewUrl($id);
+
+        return $this->ok($result);
+    }
+
+    public function thumbnail(int $id): ResponseInterface
+    {
+        $result = (new DocumentService())->getThumbnailUrl($id);
+
+        return $this->ok($result);
     }
 }

@@ -122,4 +122,46 @@ class DocumentModel extends Model
     {
         return $this->where('folder_id', $folderId)->orderBy('name', 'asc')->findAll();
     }
+
+    /**
+     * §17/§24 — backs GET /documents. Visibility (which documents the
+     * caller may even see) is resolved inside sp_document_search itself
+     * (§6.3: any qualifying grant path, direct or inherited) — this only
+     * shapes params in and rows out.
+     *
+     * @return array{items: list<array<string, mixed>>, total: int}
+     */
+    public function search(
+        int $userId,
+        bool $isAdmin,
+        ?string $search,
+        ?int $folderId,
+        ?string $mimeType,
+        string $sort,
+        string $direction,
+        int $page,
+        int $limit,
+    ): array {
+        [$rows, $out] = (new StoredProcedure($this->db))->callWithResultSet('sp_document_search', [
+            $userId, $isAdmin ? 1 : 0, $search, $folderId, $mimeType, $sort, $direction, $page, $limit,
+        ], ['p_total_count']);
+
+        $items = array_map(static fn (array $row): array => [
+            'id'             => (int) $row['id'],
+            'name'           => $row['name'],
+            'description'    => $row['description'],
+            'tags'           => $row['tags'] === null || $row['tags'] === '' ? [] : array_map('trim', explode(',', $row['tags'])),
+            'folderId'       => (int) $row['folder_id'],
+            'folderName'     => $row['folder_name'],
+            'currentVersion' => (int) $row['current_version'],
+            'mimeType'       => $row['mime_type'],
+            'sizeBytes'      => (int) $row['size_bytes'],
+            'hasThumbnail'   => $row['thumbnail_s3_key'] !== null,
+            'createdBy'      => (int) $row['created_by'],
+            'createdAt'      => $row['created_at'],
+            'updatedAt'      => $row['updated_at'],
+        ], $rows);
+
+        return ['items' => $items, 'total' => (int) $out['p_total_count']];
+    }
 }

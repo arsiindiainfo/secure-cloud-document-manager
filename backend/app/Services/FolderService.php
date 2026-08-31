@@ -29,9 +29,14 @@ class FolderService
         $this->permissions = $permissions ?? new PermissionResolver(db_connect());
     }
 
-    public function authorize(int $folderId, string $required): Folder
+    /**
+     * $includeDeleted is for restore() only — every other caller must go
+     * through the normal soft-delete-filtered lookup, or a soft-deleted
+     * folder would stay reachable (and actionable) via any other endpoint.
+     */
+    public function authorize(int $folderId, string $required, bool $includeDeleted = false): Folder
     {
-        $folder = $this->folders->find($folderId);
+        $folder = $includeDeleted ? $this->folders->withDeleted()->find($folderId) : $this->folders->find($folderId);
         if ($folder === null) {
             throw new FolderNotFoundException();
         }
@@ -115,7 +120,7 @@ class FolderService
 
     public function restore(int $folderId): void
     {
-        $this->authorize($folderId, 'OWNER');
+        $this->authorize($folderId, 'OWNER', includeDeleted: true);
         $this->folders->restore($folderId, Services::authContext()->userId());
     }
 

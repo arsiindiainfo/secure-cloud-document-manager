@@ -3,15 +3,19 @@
 namespace App\Services;
 
 use App\Constants\FileTypes;
+use App\DTOs\PaginationRequestDTO;
 use App\Entities\Document;
+use App\Entities\DocumentVersion;
 use App\Exceptions\DocumentNotFoundException;
 use App\Exceptions\FileTooLargeException;
+use App\Exceptions\ThumbnailNotReadyException;
 use App\Exceptions\UnsupportedFileTypeException;
 use App\Exceptions\ValidationException;
 use App\Libraries\PermissionResolver;
 use App\Libraries\S3Service;
 use App\Models\AuditLogModel;
 use App\Models\DocumentModel;
+use App\Models\DocumentProcessingJobModel;
 use App\Models\DocumentVersionModel;
 use Config\Services;
 
@@ -30,14 +34,16 @@ class DocumentService
         private readonly FolderService $folderService = new FolderService(),
         private readonly AuditLogModel $auditLog = new AuditLogModel(),
         private readonly S3Service $s3 = new S3Service(),
+        private readonly DocumentProcessingJobModel $processingJobs = new DocumentProcessingJobModel(),
         ?PermissionResolver $permissions = null,
     ) {
         $this->permissions = $permissions ?? new PermissionResolver(db_connect());
     }
 
-    public function authorize(int $documentId, string $required): Document
+    /** $includeDeleted is for restore() only — see FolderService::authorize(). */
+    public function authorize(int $documentId, string $required, bool $includeDeleted = false): Document
     {
-        $document = $this->documents->find($documentId);
+        $document = $includeDeleted ? $this->documents->withDeleted()->find($documentId) : $this->documents->find($documentId);
         if ($document === null) {
             throw new DocumentNotFoundException();
         }
@@ -74,13 +80,18 @@ class DocumentService
             ? 'OWNER'
             : ($this->permissions->documentPermission($auth->userId(), $documentId, $document->folder_id) ?? 'VIEWER');
 
+        $currentVersion = $this->versions->current($documentId);
+
         return [
             ...$document->toArray(),
             // Named distinctly from the plain `currentVersion` version
             // *number* already in toArray() — this is the version's own
             // detail (mime/size/thumbnail), not just its ordinal.
-            'currentVersionDetail' => $this->versions->current($documentId),
+            'currentVersionDetail' => $currentVersion,
             'effectivePermission'  => $permission,
+            // §9.3/§22.4 — drives the "generating preview…" placeholder
+            // until the Lambda's callback flips this to COMPLETED.
+            'processingStatus'     => $currentVersion !== null ? $this->processingJobs->statusForVersion($currentVersion->id) : null,
         ];
     }
 
@@ -191,8 +202,33 @@ class DocumentService
 
     public function restore(int $documentId): void
     {
-        $this->authorize($documentId, 'OWNER');
+        $this->authorize($documentId, 'OWNER', includeDeleted: true);
         $this->documents->restore($documentId, Services::authContext()->userId());
+    }
+
+    /**
+     * §17/§24 — GET /documents. Sort is allow-listed here, not left to the
+     * client, since it's interpolated into the SP call as a plain string.
+     *
+     * @return array{items: list<array<string, mixed>>, meta: array{page: int, limit: int, total: int}}
+     */
+    public function search(PaginationRequestDTO $pagination, ?int $folderId, ?string $mimeType): array
+    {
+        $auth = Services::authContext();
+
+        $result = $this->documents->search(
+            $auth->userId(),
+            $auth->isAdmin(),
+            $pagination->search,
+            $folderId,
+            $mimeType,
+            $pagination->sort ?? 'updatedAt',
+            $pagination->direction,
+            $pagination->page,
+            $pagination->limit,
+        );
+
+        return ['items' => $result['items'], 'meta' => $pagination->meta($result['total'])];
     }
 
     /** @return list<\App\Entities\DocumentVersion> newest first */
@@ -201,6 +237,76 @@ class DocumentService
         $this->authorize($documentId, 'VIEWER');
 
         return $this->versions->allForDocument($documentId);
+    }
+
+    /**
+     * §18 — a presigned GET scoped to one exact key, with
+     * response-content-disposition: attachment. Every download is audited.
+     *
+     * @return array{url: string, expiresIn: int}
+     */
+    public function getDownloadUrl(int $documentId, ?int $versionId): array
+    {
+        $document = $this->authorize($documentId, 'VIEWER');
+        $version  = $this->resolveVersion($documentId, $versionId);
+        $auth     = Services::authContext();
+
+        $disposition = 'attachment; filename="' . str_replace('"', '', $document->name) . '"';
+        $url         = $this->s3->presignGet($version->s3_key, $disposition);
+
+        $this->auditLog->record($auth->userId(), 'DOCUMENT_DOWNLOADED', 'DOCUMENT', $documentId, ['versionId' => $version->id]);
+
+        return ['url' => $url, 'expiresIn' => config('Aws')->presignTtlSeconds];
+    }
+
+    /**
+     * Inline for browser-renderable types; other types fall back to the
+     * Lambda-generated thumbnail (§9.3, §18).
+     *
+     * @return array{url: string, expiresIn: int}
+     */
+    public function getPreviewUrl(int $documentId): array
+    {
+        $this->authorize($documentId, 'VIEWER');
+        $version = $this->resolveVersion($documentId, null);
+
+        if (in_array($version->mime_type, FileTypes::INLINE_PREVIEWABLE_MIME_TYPES, true)) {
+            $url = $this->s3->presignGet($version->s3_key, 'inline');
+
+            return ['url' => $url, 'expiresIn' => config('Aws')->presignTtlSeconds];
+        }
+
+        return $this->getThumbnailUrl($documentId);
+    }
+
+    /**
+     * @return array{url: string, expiresIn: int}
+     */
+    public function getThumbnailUrl(int $documentId): array
+    {
+        $this->authorize($documentId, 'VIEWER');
+        $version = $this->resolveVersion($documentId, null);
+
+        if ($version->thumbnail_s3_key === null) {
+            throw new ThumbnailNotReadyException();
+        }
+
+        $url = $this->s3->presignGet($version->thumbnail_s3_key);
+
+        return ['url' => $url, 'expiresIn' => config('Aws')->presignTtlSeconds];
+    }
+
+    private function resolveVersion(int $documentId, ?int $versionId): DocumentVersion
+    {
+        $version = $versionId !== null
+            ? $this->versions->findForDocument($documentId, $versionId)
+            : $this->versions->current($documentId);
+
+        if ($version === null) {
+            throw new DocumentNotFoundException();
+        }
+
+        return $version;
     }
 
     /** @return array{uploadUrl: string, s3Key: string, expiresIn: int} */

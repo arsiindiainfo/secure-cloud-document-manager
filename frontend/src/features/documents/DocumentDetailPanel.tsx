@@ -4,6 +4,8 @@ import * as api from './api';
 import { apiErrorMessage } from '../../lib/apiError';
 import { formatBytes } from '../../lib/fileTypes';
 import { folderChildrenKey } from '../browser/hooks';
+import { FilePreview } from '../../components/FilePreview';
+import { ShareDialog } from '../sharing/ShareDialog';
 
 interface DocumentDetailPanelProps {
   documentId: number;
@@ -21,14 +23,30 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
   const { data, isLoading } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => api.fetchDocument(documentId),
+    // §9.3/§22.4 — poll while the Lambda's callback hasn't landed yet, so
+    // "generating preview…" flips to the real preview without a manual refresh.
+    refetchInterval: (query) => (query.state.data?.processingStatus === 'PENDING' || query.state.data?.processingStatus === 'PROCESSING' ? 3000 : false),
   });
 
+  const [activeTab, setActiveTab] = useState<'details' | 'preview'>('details');
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+
+  async function handleDownload() {
+    setDownloadError(null);
+    try {
+      const result = await api.fetchDownloadUrl(documentId);
+      window.open(result.url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      setDownloadError(apiErrorMessage(err, 'Could not generate a download link'));
+    }
+  }
 
   function startEditing() {
     if (!data) return;
@@ -65,7 +83,38 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
 
         {isLoading && <div className="h-32 animate-pulse rounded-md bg-slate-200 dark:bg-slate-700" />}
 
-        {data && !isEditing && (
+        {data && (
+          <div className="mb-4 flex gap-1 border-b border-slate-200 dark:border-slate-700">
+            {(['details', 'preview'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-3 py-2 text-sm capitalize ${
+                  activeTab === tab
+                    ? 'border-b-2 border-blue-600 font-medium text-blue-600 dark:text-blue-400'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {data && activeTab === 'preview' && (
+          <div className="space-y-3">
+            <FilePreview documentId={documentId} mimeType={data.currentVersionDetail?.mimeType ?? ''} processingStatus={data.processingStatus} />
+            <button
+              onClick={() => void handleDownload()}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              Download
+            </button>
+            {downloadError && <p className="text-sm text-red-600">{downloadError}</p>}
+          </div>
+        )}
+
+        {data && activeTab === 'details' && !isEditing && (
           <div className="space-y-3 text-sm">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Name</p>
@@ -91,18 +140,28 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
               <p className="text-slate-800 dark:text-slate-200">{data.effectivePermission}</p>
             </div>
 
-            {(data.effectivePermission === 'EDITOR' || data.effectivePermission === 'OWNER') && (
-              <button
-                onClick={startEditing}
-                className="mt-2 rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
-              >
-                Edit
-              </button>
-            )}
+            <div className="mt-2 flex gap-2">
+              {(data.effectivePermission === 'EDITOR' || data.effectivePermission === 'OWNER') && (
+                <button
+                  onClick={startEditing}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                  Edit
+                </button>
+              )}
+              {(data.effectivePermission === 'EDITOR' || data.effectivePermission === 'OWNER') && (
+                <button
+                  onClick={() => setShowShareDialog(true)}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                  Share
+                </button>
+              )}
+            </div>
           </div>
         )}
 
-        {data && isEditing && (
+        {data && activeTab === 'details' && isEditing && (
           <div className="space-y-3">
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Name *</label>
@@ -152,6 +211,10 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
           </div>
         )}
       </div>
+
+      {showShareDialog && data && (
+        <ShareDialog documentId={documentId} effectivePermission={data.effectivePermission} onClose={() => setShowShareDialog(false)} />
+      )}
     </div>
   );
 }

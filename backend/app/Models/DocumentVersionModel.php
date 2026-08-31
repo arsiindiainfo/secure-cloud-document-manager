@@ -14,6 +14,7 @@ class DocumentVersionModel extends Model
     protected $table         = 'document_versions';
     protected $primaryKey    = 'id';
     protected $returnType    = DocumentVersion::class;
+    protected $allowedFields = ['thumbnail_s3_key'];
     protected $useTimestamps = false;
 
     public function current(int $documentId): ?DocumentVersion
@@ -30,5 +31,17 @@ class DocumentVersionModel extends Model
     public function findForDocument(int $documentId, int $versionId): ?DocumentVersion
     {
         return $this->where('document_id', $documentId)->where('id', $versionId)->first();
+    }
+
+    /** §9.3 — written only by ProcessingService::handleCallback() once the Lambda's thumbnail lands in S3. */
+    public function setThumbnail(int $versionId, string $thumbnailS3Key): void
+    {
+        $this->update($versionId, ['thumbnail_s3_key' => $thumbnailS3Key]);
+    }
+
+    /** §9.3 — the Lambda's callback only ever knows the S3 key, never the DB id (see ProcessingService). */
+    public function findByS3Key(string $s3Key): ?DocumentVersion
+    {
+        return $this->where('s3_key', $s3Key)->first();
     }
 }

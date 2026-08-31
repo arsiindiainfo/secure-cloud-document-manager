@@ -2,6 +2,7 @@
 
 namespace Config;
 
+use App\Filters\InternalHmacFilter;
 use App\Filters\JwtAuthFilter;
 use App\Filters\RoleFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
@@ -38,6 +39,7 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'jwtAuth'       => JwtAuthFilter::class,
         'role'          => RoleFilter::class,
+        'internalHmac'  => InternalHmacFilter::class,
     ];
 
     /**

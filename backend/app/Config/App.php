@@ -19,6 +19,14 @@ class App extends BaseConfig
     public string $baseURL = 'http://localhost:8080/';
 
     /**
+     * Origin of the React SPA — used only to build the human-facing public
+     * share-link URL returned by POST /documents/:id/share-links (§18). The
+     * API itself never redirects here; the browser does when a person opens
+     * the link.
+     */
+    public string $frontendUrl = 'http://localhost:5173';
+
+    /**
      * Allowed Hostnames in the Site URL other than the hostname in the baseURL.
      * If you want to accept multiple Hostnames, set this.
      *
