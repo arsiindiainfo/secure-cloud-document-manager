@@ -34,16 +34,22 @@ echo "[localstack-init] created buckets: ${DOCS_BUCKET}, ${SPA_BUCKET}"
 # Lambda's own output, and re-triggering on it would loop forever).
 # --------------------------------------------------------------------------
 
-LAMBDA_DIR="/opt/code/processing-worker"
-LAMBDA_ZIP="/tmp/processing-worker.zip"
+LAMBDA_ZIP="/opt/code/processing-worker.zip"
 FUNCTION_NAME="processing-worker"
 
-if [ -d "${LAMBDA_DIR}" ]; then
-  echo "[localstack-init] packaging ${FUNCTION_NAME}..."
-  (cd "${LAMBDA_DIR}" && python3 -c "
-import shutil
-shutil.make_archive('/tmp/processing-worker', 'zip', '.')
-")
+if [ -f "${LAMBDA_ZIP}" ]; then
+  # The zip is pre-built on the host (see the volume mount in
+  # docker-compose.yml) and bind-mounted in as a single file — building it
+  # here by walking node_modules through a Windows bind mount was orders of
+  # magnitude slower (many minutes for a many-small-files tree) than doing
+  # the same walk natively on the host once. @aws-sdk/@smithy are excluded
+  # from that host-side build: the Lambda Node.js runtime ships the AWS SDK
+  # v3 pre-installed (real AWS does this too), so index.js's
+  # require('@aws-sdk/client-s3') resolves from the runtime, not this zip.
+  # Idempotent: a container restart re-runs every ready.d script, and
+  # LocalStack's Lambda state isn't guaranteed to survive that — recreate
+  # cleanly instead of failing on "already exists".
+  awslocal lambda delete-function --function-name "${FUNCTION_NAME}" 2>/dev/null || true
 
   awslocal lambda create-function \
     --function-name "${FUNCTION_NAME}" \
@@ -77,5 +83,5 @@ shutil.make_archive('/tmp/processing-worker', 'zip', '.')
 
   echo "[localstack-init] ${FUNCTION_NAME} deployed and wired to s3://${DOCS_BUCKET}/documents/*"
 else
-  echo "[localstack-init] WARNING: ${LAMBDA_DIR} not mounted — skipping processing-worker deployment (§9.3 async processing will not run)"
+  echo "[localstack-init] WARNING: ${LAMBDA_ZIP} not mounted — skipping processing-worker deployment (§9.3 async processing will not run)"
 fi

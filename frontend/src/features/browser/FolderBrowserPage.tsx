@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Breadcrumbs } from '../../components/Breadcrumbs';
+import { BrandLogo } from '../../components/BrandLogo';
 import { UploadDropzone } from '../../components/UploadDropzone';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { useAuth } from '../auth/useAuth';
@@ -57,7 +58,10 @@ export function FolderBrowserPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-800">
-        <Breadcrumbs entries={data?.breadcrumb ?? []} />
+        <div className="flex items-center gap-4">
+          <BrandLogo className="h-6" />
+          <Breadcrumbs entries={data?.breadcrumb ?? []} />
+        </div>
         <div className="flex items-center gap-3">
           <form onSubmit={handleSearchSubmit}>
             <input
@@ -67,6 +71,20 @@ export function FolderBrowserPage() {
               className="w-48 rounded-md border border-slate-300 px-2.5 py-1.5 text-xs dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </form>
+          <button
+            onClick={() => navigate('/trash')}
+            className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            Trash
+          </button>
+          {user?.role === 'ADMIN' && (
+            <button
+              onClick={() => navigate('/admin/users')}
+              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              Users
+            </button>
+          )}
           {user?.role === 'ADMIN' && (
             <button
               onClick={() => navigate('/admin/audit-log')}

@@ -80,6 +80,17 @@ final class AuthControllerTest extends ApiTestCase
         $reuse->assertStatus(401);
     }
 
+    public function testLoginIsRateLimitedAfterTenAttemptsPerMinute(): void
+    {
+        for ($i = 0; $i < 10; $i++) {
+            $this->post('api/v1/auth/login', ['email' => 'admin@meridian.test', 'password' => 'wrong'])->assertStatus(401);
+        }
+
+        $result = $this->post('api/v1/auth/login', ['email' => 'admin@meridian.test', 'password' => 'wrong']);
+        $result->assertStatus(429);
+        $this->assertSame('RATE_LIMITED', json_decode($result->getJSON(), true)['error']['code']);
+    }
+
     public function testLogoutRevokesRefreshToken(): void
     {
         $login = json_decode($this->post('api/v1/auth/login', [

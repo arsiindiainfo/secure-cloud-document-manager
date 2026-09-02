@@ -164,4 +164,72 @@ class DocumentModel extends Model
 
         return ['items' => $items, 'total' => (int) $out['p_total_count']];
     }
+
+    /**
+     * §22.8 — every soft-deleted document, ADMIN's trash view.
+     *
+     * @return list<Document>
+     */
+    public function allTrashed(): array
+    {
+        return $this->onlyDeleted()->orderBy('deleted_at', 'desc')->findAll();
+    }
+
+    /**
+     * §22.8 — soft-deleted documents the caller is OWNER of (direct grant only — trash is not inherited).
+     *
+     * @return list<Document>
+     */
+    public function trashedOwnedBy(int $userId): array
+    {
+        return $this->onlyDeleted()->select('documents.*')
+            ->join('document_permissions', 'document_permissions.document_id = documents.id')
+            ->where('document_permissions.user_id', $userId)
+            ->where('document_permissions.permission', 'OWNER')
+            ->orderBy('documents.deleted_at', 'desc')
+            ->findAll();
+    }
+
+    /**
+     * §22.2 dashboard — total bytes across every accessible document's
+     * current version. Mirrors sp_document_search's visibility resolution
+     * (§6.3: direct grant or any ancestor-folder grant) as a plain read;
+     * this is an aggregate query, not a business-rule write, so no
+     * stored procedure is warranted here (§5).
+     */
+    public function accessibleStorageBytes(int $userId, bool $isAdmin): int
+    {
+        if ($isAdmin) {
+            $row = $this->db->query(<<<'SQL'
+                SELECT COALESCE(SUM(v.size_bytes), 0) AS total
+                FROM documents d
+                JOIN document_versions v ON v.document_id = d.id AND v.is_current = 1
+                WHERE d.deleted_at IS NULL
+            SQL)->getRowArray();
+
+            return (int) $row['total'];
+        }
+
+        $row = $this->db->query(<<<'SQL'
+            WITH RECURSIVE granted_folders AS (
+              SELECT folder_id AS id FROM document_permissions
+                WHERE user_id = ? AND folder_id IS NOT NULL
+              UNION ALL
+              SELECT f.id FROM folders f
+              JOIN granted_folders gf ON f.parent_folder_id = gf.id
+              WHERE f.deleted_at IS NULL
+            ),
+            accessible AS (
+              SELECT document_id AS id FROM document_permissions WHERE user_id = ? AND document_id IS NOT NULL
+              UNION
+              SELECT doc.id FROM documents doc JOIN granted_folders gf ON gf.id = doc.folder_id
+            )
+            SELECT COALESCE(SUM(v.size_bytes), 0) AS total
+            FROM accessible a
+            JOIN documents d ON d.id = a.id AND d.deleted_at IS NULL
+            JOIN document_versions v ON v.document_id = d.id AND v.is_current = 1
+        SQL, [$userId, $userId])->getRowArray();
+
+        return (int) $row['total'];
+    }
 }

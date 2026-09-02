@@ -125,4 +125,29 @@ class FolderModel extends Model
             ->orderBy('folders.name', 'asc')
             ->findAll();
     }
+
+    /**
+     * §22.8 — every soft-deleted folder, ADMIN's trash view.
+     *
+     * @return list<Folder>
+     */
+    public function allTrashed(): array
+    {
+        return $this->onlyDeleted()->orderBy('deleted_at', 'desc')->findAll();
+    }
+
+    /**
+     * §22.8 — soft-deleted folders the caller is OWNER of (direct grant only — trash is not inherited).
+     *
+     * @return list<Folder>
+     */
+    public function trashedOwnedBy(int $userId): array
+    {
+        return $this->onlyDeleted()->select('folders.*')
+            ->join('document_permissions', 'document_permissions.folder_id = folders.id')
+            ->where('document_permissions.user_id', $userId)
+            ->where('document_permissions.permission', 'OWNER')
+            ->orderBy('folders.deleted_at', 'desc')
+            ->findAll();
+    }
 }

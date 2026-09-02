@@ -4,6 +4,7 @@ namespace Config;
 
 use App\Filters\InternalHmacFilter;
 use App\Filters\JwtAuthFilter;
+use App\Filters\RateLimitFilter;
 use App\Filters\RoleFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
@@ -40,6 +41,7 @@ class Filters extends BaseFilters
         'jwtAuth'       => JwtAuthFilter::class,
         'role'          => RoleFilter::class,
         'internalHmac'  => InternalHmacFilter::class,
+        'rateLimit'     => RateLimitFilter::class,
     ];
 
     /**
@@ -85,7 +87,7 @@ class Filters extends BaseFilters
         ],
         'after' => [
             // 'honeypot',
-            // 'secureheaders',
+            'secureheaders',
         ],
     ];
 

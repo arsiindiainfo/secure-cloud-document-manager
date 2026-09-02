@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\DTOs\PaginationRequestDTO;
 use App\Services\UsersService;
 use CodeIgniter\HTTP\ResponseInterface;
+use OpenApi\Attributes as OA;
 
 /**
  * §15 — user management. ADMIN-only except `me`, enforced via the `role`
@@ -12,11 +13,47 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 class UsersController extends BaseController
 {
+    #[OA\Get(
+        path: '/users/me',
+        tags: ['Users'],
+        summary: "Current user's profile",
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Profile', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'data', ref: '#/components/schemas/User'),
+            ])),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+        ],
+    )]
     public function me(): ResponseInterface
     {
         return $this->ok((new UsersService())->me());
     }
 
+    #[OA\Post(
+        path: '/users',
+        tags: ['Users'],
+        summary: 'Invite a new user (ADMIN)',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['name', 'email', 'role'],
+            properties: [
+                new OA\Property(property: 'name', type: 'string', minLength: 2, maxLength: 120),
+                new OA\Property(property: 'email', type: 'string', format: 'email'),
+                new OA\Property(property: 'role', type: 'string', enum: ['ADMIN', 'MANAGER', 'EMPLOYEE']),
+            ],
+        )),
+        responses: [
+            new OA\Response(response: 201, description: 'Invited', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'data', properties: [new OA\Property(property: 'userId', type: 'integer')], type: 'object'),
+            ])),
+            new OA\Response(response: 400, ref: '#/components/responses/ValidationError'),
+            new OA\Response(response: 403, ref: '#/components/responses/ForbiddenRole'),
+            new OA\Response(response: 409, ref: '#/components/responses/Conflict', description: '409 DUPLICATE_NAME — email already registered'),
+        ],
+    )]
     public function invite(): ResponseInterface
     {
         $data = $this->validated('usersInvite');
@@ -31,6 +68,24 @@ class UsersController extends BaseController
         return $this->created(['userId' => $result['userId']]);
     }
 
+    #[OA\Get(
+        path: '/users',
+        tags: ['Users'],
+        summary: 'Paginated team member list (ADMIN)',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'page', in: 'query', schema: new OA\Schema(type: 'integer', default: 1)),
+            new OA\Parameter(name: 'limit', in: 'query', schema: new OA\Schema(type: 'integer', default: 20)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Users', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/User')),
+                new OA\Property(property: 'meta', ref: '#/components/schemas/PaginationMeta'),
+            ])),
+            new OA\Response(response: 403, ref: '#/components/responses/ForbiddenRole'),
+        ],
+    )]
     public function index(): ResponseInterface
     {
         $pagination = PaginationRequestDTO::fromRequest($this->request, ['createdAt', 'name'], 'createdAt');
@@ -40,6 +95,25 @@ class UsersController extends BaseController
         return $this->paginated($result['items'], $pagination->meta($result['total']));
     }
 
+    #[OA\Put(
+        path: '/users/{id}',
+        tags: ['Users'],
+        summary: 'Update role/status (ADMIN)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\PathParameter(name: 'id', schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'role', type: 'string', enum: ['ADMIN', 'MANAGER', 'EMPLOYEE']),
+            new OA\Property(property: 'status', type: 'string', enum: ['ACTIVE', 'DISABLED']),
+        ])),
+        responses: [
+            new OA\Response(response: 200, description: 'Updated user', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'data', ref: '#/components/schemas/User'),
+            ])),
+            new OA\Response(response: 400, ref: '#/components/responses/ValidationError'),
+            new OA\Response(response: 403, ref: '#/components/responses/ForbiddenRole'),
+        ],
+    )]
     public function update(int $id): ResponseInterface
     {
         $data = $this->validated('usersUpdate');

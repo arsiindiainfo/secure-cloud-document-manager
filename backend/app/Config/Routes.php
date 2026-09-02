@@ -15,7 +15,8 @@ $routes->options('(:any)', static fn () => service('response')->setStatusCode(20
 // (auth/login, auth/refresh, /s/:token, /internal/processing-callback) are
 // deliberately outside the jwtAuth-filtered group below.
 $routes->group('api/v1', function ($routes) {
-    $routes->post('auth/login', 'AuthController::login');
+    // §15 — 10/min/IP, cache-backed (§5).
+    $routes->post('auth/login', 'AuthController::login', ['filter' => 'rateLimit:10,60']);
     $routes->post('auth/refresh', 'AuthController::refresh');
 
     $routes->group('', ['filter' => 'jwtAuth'], function ($routes) {
@@ -64,6 +65,10 @@ $routes->group('api/v1', function ($routes) {
 
         // §19 — audit trail, ADMIN only
         $routes->get('audit-logs', 'AuditLogController::index', ['filter' => 'role:ADMIN']);
+
+        // §22.2/§22.8 — dashboard summary, trash listing (both caller-scoped)
+        $routes->get('dashboard', 'DashboardController::index');
+        $routes->get('trash', 'TrashController::index');
     });
 
     // §9.3/§19 — internal, HMAC-signed (never a user JWT): deliberately
@@ -73,3 +78,7 @@ $routes->group('api/v1', function ($routes) {
 
 // §12/§19 — the one public, unversioned route: trust is the token itself.
 $routes->get('s/(:any)', 'PublicShareController::resolve/$1');
+
+// §26 — OpenAPI docs, non-production only (guarded inside the controller).
+$routes->get('api/docs', 'OpenApiController::ui');
+$routes->get('api/docs.json', 'OpenApiController::spec');

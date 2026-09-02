@@ -4,8 +4,11 @@ import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { FolderBrowserPage } from '../features/browser/FolderBrowserPage';
 import { SearchResultsPage } from '../features/search/SearchResultsPage';
 import { AuditLogPage } from '../features/audit/AuditLogPage';
+import { TrashPage } from '../features/trash/TrashPage';
+import { UserManagementPage } from '../features/users/UserManagementPage';
 import { PublicSharePage } from '../features/publicShare/PublicSharePage';
 import { ProtectedRoute } from './ProtectedRoute';
+import { RequireRole } from './RequireRole';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -18,7 +21,15 @@ export const router = createBrowserRouter([
       { path: '/browse/:folderId?', element: <FolderBrowserPage /> },
       { path: '/dashboard', element: <DashboardPage /> },
       { path: '/search', element: <SearchResultsPage /> },
-      { path: '/admin/audit-log', element: <AuditLogPage /> },
+      { path: '/trash', element: <TrashPage /> },
+      {
+        // §22.9/§22.10 — ADMIN only; anyone else is bounced to the dashboard.
+        element: <RequireRole role="ADMIN" />,
+        children: [
+          { path: '/admin/audit-log', element: <AuditLogPage /> },
+          { path: '/admin/users', element: <UserManagementPage /> },
+        ],
+      },
     ],
   },
 ]);

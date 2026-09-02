@@ -118,6 +118,38 @@ export interface DocumentSearchResult {
   updatedAt: string;
 }
 
+export interface TrashedFolder extends Folder {
+  daysRemaining: number;
+}
+
+export interface TrashedDocument extends Document {
+  daysRemaining: number;
+}
+
+export interface TrashListing {
+  folders: TrashedFolder[];
+  documents: TrashedDocument[];
+}
+
+export interface RecentDocumentActivity {
+  documentId: number;
+  name: string;
+  folderId: number;
+  action: string;
+  at: string;
+}
+
+export interface SharedFolderSummary {
+  id: number;
+  name: string;
+}
+
+export interface DashboardSummary {
+  recentDocuments: RecentDocumentActivity[];
+  storageUsedBytes: number;
+  sharedFolders: SharedFolderSummary[];
+}
+
 export interface AuditLogEntry {
   id: number;
   userId: number | null;

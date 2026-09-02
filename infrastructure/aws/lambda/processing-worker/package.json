@@ -5,8 +5,11 @@
   "description": "S3-event-triggered post-upload processing (§9.3): thumbnail generation, basic metadata extraction, virus-scan stub. Deliberately pure-JS dependencies only (no native bindings) so the same package works unmodified whether it's installed on the dev host or inside the Lambda's Linux execution container.",
   "main": "index.js",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.600.0",
     "jimp": "^0.22.12",
     "pdf-lib": "^1.17.1"
-  }
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.600.0"
+  },
+  "comment": "index.js requires @aws-sdk/client-s3 at runtime but it is NOT bundled into the deployment zip (see infrastructure/localstack/init-aws.sh) — the Lambda Node.js runtime image ships the AWS SDK v3 pre-installed, exactly so functions don't need to carry it themselves. It's listed under devDependencies only so `npm install` still provides it for local editing/type-checking."
 }

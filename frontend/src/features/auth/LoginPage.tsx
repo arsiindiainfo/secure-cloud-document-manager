@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
 import { apiErrorMessage } from '../../lib/apiError';
+import { BrandLogo } from '../../components/BrandLogo';
+import { BrandFooter } from '../../components/BrandFooter';
 
 // Mirrors the backend's `authLogin` rule group (§5, §23) — the same shape
 // is validated client- and server-side.
@@ -37,8 +39,9 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
       <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <BrandLogo className="mb-4 h-10" />
         <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
           Secure Cloud Document Manager
         </h1>
@@ -88,6 +91,7 @@ export function LoginPage() {
           </button>
         </form>
       </div>
+      <BrandFooter />
     </div>
   );
 }

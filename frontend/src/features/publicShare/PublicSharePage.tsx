@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { resolveShareLink } from './api';
 import { formatBytes } from '../../lib/fileTypes';
+import { BrandLogo } from '../../components/BrandLogo';
+import { BrandFooter } from '../../components/BrandFooter';
 import type { ApiErrorResponse } from '../../types/api';
 
 // §22.11 — no auth, no app shell: a standalone page, not wrapped in the SPA
@@ -32,6 +34,7 @@ export function PublicSharePage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-900">
       <div className="w-full max-w-sm rounded-lg bg-white p-8 text-center shadow-lg dark:bg-slate-800">
+        <BrandLogo className="mx-auto mb-4 h-8" />
         <p className="mb-6 text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
           Secure Cloud Document Manager
         </p>
@@ -60,6 +63,7 @@ export function PublicSharePage() {
           </>
         )}
       </div>
+      <BrandFooter />
     </div>
   );
 }

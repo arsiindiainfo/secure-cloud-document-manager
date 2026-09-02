@@ -7,6 +7,7 @@ use App\Libraries\JwtService;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
+use Config\Services;
 
 /**
  * Base for every controller feature test (§25): runs the REAL migrations
@@ -43,6 +44,12 @@ abstract class ApiTestCase extends CIUnitTestCase
         $this->setUpMigrate();
         $this->truncateAppTables();
         $this->setUpSeed();
+        // RateLimitFilter (§5/§15) is cache-backed, not DB-backed — without
+        // this, every test hitting a rate-limited route would share one
+        // counter across the whole suite (and across separate runs, since
+        // the file cache persists on disk), tripping RATE_LIMITED at an
+        // unrelated test purely based on run order.
+        Services::cache()->clean();
     }
 
     private function truncateAppTables(): void

@@ -33,12 +33,22 @@ services:
       LAMBDA_DOCKER_NETWORK: secure-cloud-document-manager_default
       API_CALLBACK_URL: http://api:8080/api/v1/internal/processing-callback
       INTERNAL_HMAC_SECRET: local-dev-hmac-secret-do-not-use-in-production
+      # Lambda's own Docker-in-Docker cold start (a nested container per
+      # invocation) needs more headroom than the default on a slow/loaded
+      # host — the default has been observed to time out before the
+      # container even finishes starting, well before the handler runs.
+      LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT: "120"
     ports:
       - "4566:4566"
     volumes:
       - localstack-data:/var/lib/localstack
       - ./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
-      - ./aws/lambda/processing-worker:/opt/code/processing-worker:ro
+      # A single pre-built zip (built on the host via
+      # `Compress-Archive`/`zip`, see README in that folder), not the raw
+      # source directory — zipping node_modules *inside* the container by
+      # walking a Windows bind mount was orders of magnitude slower than
+      # zipping it natively on the host first.
+      - ./aws/lambda/processing-worker.zip:/opt/code/processing-worker.zip:ro
       - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
