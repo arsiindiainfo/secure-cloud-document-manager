@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { LoginPage } from '../features/auth/LoginPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
@@ -33,3 +40,4 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+

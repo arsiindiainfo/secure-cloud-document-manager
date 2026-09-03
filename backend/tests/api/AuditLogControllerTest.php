@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace Tests\Api;
 
 use Tests\Support\ApiTestCase;
@@ -30,3 +37,4 @@ final class AuditLogControllerTest extends ApiTestCase
         $this->withHeaders($this->employeeHeaders())->get('api/v1/audit-logs')->assertStatus(403);
     }
 }
+

@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from './api';
 import type { Permission } from '../../types/api';
@@ -49,3 +56,4 @@ export function useRevokeShareLink(documentId: number) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: shareLinksKey(documentId) }),
   });
 }
+

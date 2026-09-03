@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace Config;
 
 use CodeIgniter\Config\BaseConfig;
@@ -42,3 +49,4 @@ class Generators extends BaseConfig
         'session:migration' => 'CodeIgniter\Commands\Generators\Views\migration.tpl.php',
     ];
 }
+

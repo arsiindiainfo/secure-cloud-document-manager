@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
@@ -29,3 +36,4 @@ class CreateUsers extends Migration
         $this->db->query('DROP TABLE IF EXISTS users;');
     }
 }
+

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace App\Controllers;
 
 use App\Exceptions\ValidationException;
@@ -69,3 +76,4 @@ abstract class BaseController extends Controller
         // $this->session = service('session');
     }
 }
+

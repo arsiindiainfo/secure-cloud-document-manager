@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { apiClient } from '../../lib/apiClient';
 import type { ApiSuccess, Permission } from '../../types/api';
 
@@ -65,3 +72,4 @@ export async function createShareLink(
 export async function revokeShareLink(id: number): Promise<void> {
   await apiClient.delete(`/share-links/${id}`);
 }
+

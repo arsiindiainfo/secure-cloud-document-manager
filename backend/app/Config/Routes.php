@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 use CodeIgniter\Router\RouteCollection;
 
 /** @var RouteCollection $routes */
@@ -18,6 +25,9 @@ $routes->group('api/v1', function ($routes) {
     // §15 — 10/min/IP, cache-backed (§5).
     $routes->post('auth/login', 'AuthController::login', ['filter' => 'rateLimit:10,60']);
     $routes->post('auth/refresh', 'AuthController::refresh');
+
+    // §31.2 — public project/author metadata.
+    $routes->get('about', 'AboutController::index');
 
     $routes->group('', ['filter' => 'jwtAuth'], function ($routes) {
         $routes->post('auth/logout', 'AuthController::logout');
@@ -82,3 +92,4 @@ $routes->get('s/(:any)', 'PublicShareController::resolve/$1');
 // §26 — OpenAPI docs, non-production only (guarded inside the controller).
 $routes->get('api/docs', 'OpenApiController::ui');
 $routes->get('api/docs.json', 'OpenApiController::spec');
+

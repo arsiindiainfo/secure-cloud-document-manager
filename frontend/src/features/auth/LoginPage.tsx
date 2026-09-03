@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,6 +14,9 @@ import { useAuth } from './useAuth';
 import { apiErrorMessage } from '../../lib/apiError';
 import { BrandLogo } from '../../components/BrandLogo';
 import { BrandFooter } from '../../components/BrandFooter';
+import { Recaptcha } from '../../components/Recaptcha';
+
+const RECAPTCHA_CONFIGURED = Boolean(import.meta.env.VITE_RECAPTCHA_SITE_KEY);
 
 // Mirrors the backend's `authLogin` rule group (§5, §23) — the same shape
 // is validated client- and server-side.
@@ -21,17 +31,24 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+
+  function fillDemoAccount(email: string) {
+    setValue('email', email, { shouldValidate: true });
+    setValue('password', 'Passw0rd!', { shouldValidate: true });
+  }
 
   async function onSubmit(values: LoginForm) {
     setServerError(null);
     try {
-      await login(values.email, values.password);
+      await login(values.email, values.password, recaptchaToken);
       navigate('/', { replace: true });
     } catch (err) {
       setServerError(apiErrorMessage(err, 'Invalid email or password'));
@@ -76,6 +93,8 @@ export function LoginPage() {
             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
           </div>
 
+          <Recaptcha onChange={setRecaptchaToken} />
+
           {serverError && (
             <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
               {serverError}
@@ -84,14 +103,37 @@ export function LoginPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || (RECAPTCHA_CONFIGURED && !recaptchaToken)}
             className="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
           >
             {isSubmitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Demo accounts</p>
+          <div className="flex flex-col gap-1.5">
+            {[
+              { label: 'Ava Admin', role: 'ADMIN', email: 'admin@meridian.test' },
+              { label: 'Mark Manager', role: 'MANAGER', email: 'manager@meridian.test' },
+              { label: 'Eve Employee', role: 'EMPLOYEE', email: 'employee@meridian.test' },
+            ].map((account) => (
+              <button
+                key={account.email}
+                type="button"
+                onClick={() => fillDemoAccount(account.email)}
+                className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700/50"
+              >
+                <span>{account.label}</span>
+                <span className="text-xs text-slate-400">{account.role}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">Click a name to fill in its credentials, then Sign in.</p>
+        </div>
       </div>
       <BrandFooter />
     </div>
   );
 }
+

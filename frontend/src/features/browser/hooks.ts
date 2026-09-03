@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from './api';
 
@@ -43,3 +50,4 @@ export function useRestoreFolder(parentFolderId: number | null) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: folderChildrenKey(parentFolderId) }),
   });
 }
+

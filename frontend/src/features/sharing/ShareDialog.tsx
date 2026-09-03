@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { useState } from 'react';
 import type { Permission } from '../../types/api';
 import { apiErrorMessage } from '../../lib/apiError';
@@ -245,3 +252,4 @@ export function ShareDialog({ documentId, effectivePermission, onClose }: ShareD
     </div>
   );
 }
+

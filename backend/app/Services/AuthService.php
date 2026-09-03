@@ -1,9 +1,18 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace App\Services;
 
+use App\Exceptions\RecaptchaFailedException;
 use App\Exceptions\UnauthorizedException;
 use App\Libraries\JwtService;
+use App\Libraries\RecaptchaVerifier;
 use App\Models\RefreshTokenModel;
 use App\Models\AuditLogModel;
 use App\Models\UserModel;
@@ -23,12 +32,17 @@ class AuthService
         private readonly AuditLogModel $auditLog = new AuditLogModel(),
         private readonly JwtService $jwt = new JwtService(),
         private readonly AuthConfig $config = new AuthConfig(),
+        private readonly RecaptchaVerifier $recaptcha = new RecaptchaVerifier(),
     ) {
     }
 
     /** @return array{accessToken: string, refreshToken: string, user: \App\Entities\User} */
-    public function login(string $email, string $password, ?string $ip = null): array
+    public function login(string $email, string $password, ?string $ip = null, ?string $recaptchaToken = null): array
     {
+        if (! $this->recaptcha->verify($recaptchaToken, $ip)) {
+            throw new RecaptchaFailedException();
+        }
+
         $credentials = $this->users->findForAuthentication($email);
 
         if ($credentials === null || $credentials['status'] !== 'ACTIVE'
@@ -95,3 +109,4 @@ class AuthService
         return $token;
     }
 }
+

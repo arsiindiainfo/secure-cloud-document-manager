@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace Config;
 
 use CodeIgniter\Config\BaseConfig;
@@ -44,10 +51,15 @@ class Validation extends BaseConfig
     // against these before ever touching a Service).
     // --------------------------------------------------------------------
 
+    // recaptchaToken is intentionally not `required` here — a missing/empty
+    // token is rejected by RecaptchaVerifier itself (§15), which also lets
+    // the `testing` environment skip real Google verification without
+    // every existing login test needing to fabricate a token.
     /** @var array<string, string> */
     public array $authLogin = [
-        'email'    => 'required|valid_email',
-        'password' => 'required',
+        'email'          => 'required|valid_email',
+        'password'       => 'required',
+        'recaptchaToken' => 'permit_empty|string',
     ];
 
     /** @var array<string, string> */
@@ -151,3 +163,4 @@ class Validation extends BaseConfig
         'errorMessage'   => 'permit_empty|max_length[500]',
     ];
 }
+

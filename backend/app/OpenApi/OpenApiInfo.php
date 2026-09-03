@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace App\OpenApi;
 
 use OpenApi\Attributes as OA;
@@ -16,7 +23,8 @@ use OpenApi\Attributes as OA;
     description: "A Dropbox/Drive-style document manager. Every response is one of three shapes: `{success:true, data}`, "
         . '`{success:true, data, meta}` (paginated lists), or `{success:false, error:{code,message,details?}}` — see the '
         . '§14 error code catalog in the project plan for the full list of `error.code` values.',
-    contact: new OA\Contact(name: 'Arsi India Info'),
+    contact: new OA\Contact(name: 'Arsi India Info', url: 'https://arsiindiainfo.com'),
+    license: new OA\License(name: 'MIT', url: 'https://opensource.org/licenses/MIT'),
 )]
 #[OA\Server(url: 'http://localhost:8082/api/v1', description: 'Local Docker Compose')]
 #[OA\SecurityScheme(
@@ -37,3 +45,4 @@ use OpenApi\Attributes as OA;
 final class OpenApiInfo
 {
 }
+

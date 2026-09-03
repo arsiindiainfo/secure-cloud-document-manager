@@ -1,7 +1,15 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace Config;
 
+use App\Filters\BrandingFilter;
 use App\Filters\InternalHmacFilter;
 use App\Filters\JwtAuthFilter;
 use App\Filters\RateLimitFilter;
@@ -42,6 +50,7 @@ class Filters extends BaseFilters
         'role'          => RoleFilter::class,
         'internalHmac'  => InternalHmacFilter::class,
         'rateLimit'     => RateLimitFilter::class,
+        'branding'      => BrandingFilter::class,
     ];
 
     /**
@@ -88,6 +97,7 @@ class Filters extends BaseFilters
         'after' => [
             // 'honeypot',
             'secureheaders',
+            'branding',
         ],
     ];
 
@@ -117,3 +127,4 @@ class Filters extends BaseFilters
      */
     public array $filters = [];
 }
+

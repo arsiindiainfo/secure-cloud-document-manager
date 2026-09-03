@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace App\Exceptions;
 
 use CodeIgniter\Exceptions\HTTPExceptionInterface;
@@ -65,3 +72,4 @@ class ApiException extends RuntimeException implements HTTPExceptionInterface, R
         return service('response')->setStatusCode($this->httpStatus)->setJSON($body);
     }
 }
+

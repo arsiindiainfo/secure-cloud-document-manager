@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { useQuery } from '@tanstack/react-query';
 import { fetchPreviewUrl } from '../features/documents/api';
 import type { ProcessingStatus } from '../types/api';
@@ -64,3 +71,4 @@ export function FilePreview({ documentId, mimeType, processingStatus }: FilePrev
   // render this mime type inline — surface the thumbnail image itself.
   return <img src={data.url} alt="Document thumbnail" className="max-h-[600px] w-full rounded-md object-contain" />;
 }
+

@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { apiClient } from '../../lib/apiClient';
 import type { ApiPaginatedSuccess, ApiSuccess, Role, User, UserStatus } from '../../types/api';
 
@@ -33,3 +40,4 @@ export async function updateUser(id: number, patch: UpdateUserPayload): Promise<
   const { data } = await apiClient.put<ApiSuccess<User>>(`/users/${id}`, patch);
   return data.data;
 }
+

@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import axios from 'axios';
 import type { ApiSuccess } from '../../types/api';
 
@@ -19,3 +26,4 @@ export async function resolveShareLink(token: string): Promise<PublicShareResolu
   const { data } = await axios.get<ApiSuccess<PublicShareResolution>>(`${API_ORIGIN}/s/${token}`);
   return data.data;
 }
+

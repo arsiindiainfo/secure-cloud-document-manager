@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
+/**
  * §25 — standalone worker for the sp_document_new_version concurrency test
  * (tests/api/DocumentVersionConcurrencyTest.php). Deliberately NOT bootstrapped
  * through CodeIgniter — this needs to be a genuinely separate OS process with
@@ -43,3 +50,4 @@ echo json_encode([
 ]) . "\n";
 
 mysqli_close($mysqli);
+

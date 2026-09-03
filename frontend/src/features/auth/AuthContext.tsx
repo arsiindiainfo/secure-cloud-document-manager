@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { useEffect, useState, type ReactNode } from 'react';
 import { apiClient } from '../../lib/apiClient';
 import { tokenStore } from '../../lib/tokenStore';
@@ -20,10 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  async function login(email: string, password: string) {
+  async function login(email: string, password: string, recaptchaToken?: string | null) {
     const { data } = await apiClient.post<ApiSuccess<{ accessToken: string; refreshToken: string; user: User }>>(
       '/auth/login',
-      { email, password },
+      { email, password, recaptchaToken },
     );
     tokenStore.setTokens(data.data.accessToken, data.data.refreshToken);
     setUser(data.data.user);
@@ -40,3 +47,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return <AuthContext.Provider value={{ user, isLoading, login, logout }}>{children}</AuthContext.Provider>;
 }
+

@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { apiClient } from '../../lib/apiClient';
 import type { ApiPaginatedSuccess, AuditLogEntry } from '../../types/api';
 
@@ -13,3 +20,4 @@ export async function fetchAuditLogs(filters: AuditLogFilters): Promise<{ items:
   const { data } = await apiClient.get<ApiPaginatedSuccess<AuditLogEntry>>('/audit-logs', { params: filters });
   return { items: data.data, total: data.meta.total };
 }
+

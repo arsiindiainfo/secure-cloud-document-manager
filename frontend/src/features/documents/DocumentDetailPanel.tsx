@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from './api';
@@ -6,6 +13,7 @@ import { formatBytes } from '../../lib/fileTypes';
 import { folderChildrenKey } from '../browser/hooks';
 import { FilePreview } from '../../components/FilePreview';
 import { ShareDialog } from '../sharing/ShareDialog';
+import { uploadWithProgress, sha256Hex } from '../../lib/uploadWithProgress';
 
 interface DocumentDetailPanelProps {
   documentId: number;
@@ -37,6 +45,8 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
   const [isSaving, setIsSaving] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [isUploadingVersion, setIsUploadingVersion] = useState(false);
+  const [versionError, setVersionError] = useState<string | null>(null);
 
   async function handleDownload() {
     setDownloadError(null);
@@ -45,6 +55,22 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
       window.open(result.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
       setDownloadError(apiErrorMessage(err, 'Could not generate a download link'));
+    }
+  }
+
+  async function handleUploadVersion(file: File) {
+    setVersionError(null);
+    setIsUploadingVersion(true);
+    try {
+      const { uploadUrl, s3Key } = await api.initiateVersionUpload(documentId, file.name, file.type, file.size);
+      await uploadWithProgress(uploadUrl, file, file.type, () => {});
+      const checksum = await sha256Hex(file);
+      await api.completeVersionUpload(documentId, s3Key, checksum);
+      await queryClient.invalidateQueries({ queryKey: ['document', documentId] });
+    } catch (err) {
+      setVersionError(apiErrorMessage(err, 'Could not upload new version'));
+    } finally {
+      setIsUploadingVersion(false);
     }
   }
 
@@ -73,7 +99,7 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30">
-      <div className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl dark:bg-slate-800">
+      <div data-testid="document-detail-panel" className="h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl dark:bg-slate-800">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Document details</h2>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300" aria-label="Close">
@@ -157,7 +183,23 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
                   Share
                 </button>
               )}
+              {(data.effectivePermission === 'EDITOR' || data.effectivePermission === 'OWNER') && (
+                <label className="cursor-pointer rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">
+                  {isUploadingVersion ? 'Uploading…' : 'Upload new version'}
+                  <input
+                    type="file"
+                    className="hidden"
+                    disabled={isUploadingVersion}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = '';
+                      if (file) void handleUploadVersion(file);
+                    }}
+                  />
+                </label>
+              )}
             </div>
+            {versionError && <p className="mt-2 text-sm text-red-600">{versionError}</p>}
           </div>
         )}
 
@@ -218,3 +260,4 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
     </div>
   );
 }
+

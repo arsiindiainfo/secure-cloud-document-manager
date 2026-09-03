@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  license-headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check copyright headers (§31.2)
+        run: node scripts/check-license-headers.mjs
+
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: scdm_test
+          MYSQL_USER: scdm
+          MYSQL_PASSWORD: scdm
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+      localstack:
+        image: localstack/localstack:3.8
+        env:
+          SERVICES: s3
+          DEFAULT_REGION: us-east-1
+        ports: ['4566:4566']
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli, intl
+      - run: composer install --no-interaction --prefer-dist
+      - name: Configure environment
+        run: |
+          cp .env.example .env
+          sed -i "s#database.tests.hostname = 127.0.0.1#database.tests.hostname = 127.0.0.1#" .env
+      - name: Bootstrap LocalStack bucket
+        run: |
+          pip install awscli-local
+          awslocal s3 mb s3://scdm-documents-local
+      - run: php spark migrate --all -n App -e testing
+      - run: vendor/bin/phpstan analyse --memory-limit=512M
+      - run: vendor/bin/phpunit
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npx tsc -b --noEmit
+      - run: npx eslint .
+      - run: npx vitest run
+      - run: npm run build

@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
+/**
  * The goal of this file is to allow developers a location
  * where they can overwrite core procedural functions and
  * replace them with their own. This file is loaded during
@@ -13,3 +20,4 @@
  *
  * @see: https://codeigniter.com/user_guide/extending/common.html
  */
+

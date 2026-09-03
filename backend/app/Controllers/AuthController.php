@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace App\Controllers;
 
 use App\Services\AuthService;
@@ -21,6 +28,7 @@ class AuthController extends BaseController
             properties: [
                 new OA\Property(property: 'email', type: 'string', format: 'email'),
                 new OA\Property(property: 'password', type: 'string'),
+                new OA\Property(property: 'recaptchaToken', type: 'string', description: 'Google reCAPTCHA v2 response token'),
             ],
         )),
         responses: [
@@ -32,7 +40,7 @@ class AuthController extends BaseController
                     new OA\Property(property: 'user', ref: '#/components/schemas/User'),
                 ], type: 'object'),
             ])),
-            new OA\Response(response: 400, ref: '#/components/responses/ValidationError'),
+            new OA\Response(response: 400, ref: '#/components/responses/ValidationError', description: '400 VALIDATION_ERROR, or RECAPTCHA_FAILED if the captcha token is missing/invalid'),
             new OA\Response(response: 401, ref: '#/components/responses/Unauthorized', description: '401 — invalid credentials (generic; never reveals whether the email exists)'),
             new OA\Response(response: 429, ref: '#/components/responses/RateLimited'),
         ],
@@ -41,7 +49,7 @@ class AuthController extends BaseController
     {
         $data = $this->validated('authLogin');
 
-        $result = (new AuthService())->login($data['email'], $data['password'], $this->request->getIPAddress());
+        $result = (new AuthService())->login($data['email'], $data['password'], $this->request->getIPAddress(), $data['recaptchaToken'] ?? null);
 
         return $this->ok([
             'accessToken'  => $result['accessToken'],
@@ -102,3 +110,4 @@ class AuthController extends BaseController
         return $this->ok(['loggedOut' => true]);
     }
 }
+

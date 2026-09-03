@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 'use strict';
 
 // §9.3 — fired by an S3 ObjectCreated event on the documents bucket
@@ -217,3 +224,4 @@ exports.handler = async (event) => {
     await processRecord(record, callbackUrl);
   }
 };
+

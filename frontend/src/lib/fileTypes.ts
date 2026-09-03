@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 // Mirrors backend/app/Constants/FileTypes.php — kept in sync manually since
 // the two run in different languages. Used only for the fast client-side
 // rejection (§22.6); the backend is still the source of truth and
@@ -24,3 +31,4 @@ export function formatBytes(bytes: number): string {
   }
   return `${value.toFixed(1)} ${units[unitIndex]}`;
 }
+

@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Breadcrumbs } from '../../components/Breadcrumbs';
@@ -258,3 +265,4 @@ export function FolderBrowserPage() {
     </div>
   );
 }
+

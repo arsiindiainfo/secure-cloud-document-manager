@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 /*
  * The environment testing is reserved for PHPUnit testing. It has special
  * conditions built into the framework at various places to assist with that.
@@ -36,3 +43,4 @@ defined('SHOW_DEBUG_BACKTRACE') || define('SHOW_DEBUG_BACKTRACE', true);
  | release of the framework.
  */
 defined('CI_DEBUG') || define('CI_DEBUG', true);
+

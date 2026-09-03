@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 // fetch() has no upload-progress event, so the direct-to-S3 PUT (§21.2)
 // goes through XMLHttpRequest specifically to expose it.
 export function uploadWithProgress(url: string, file: File, contentType: string, onProgress: (pct: number) => void): Promise<void> {
@@ -33,3 +40,4 @@ export async function sha256Hex(file: File): Promise<string> {
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
 }
+

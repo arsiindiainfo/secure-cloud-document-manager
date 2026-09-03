@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 import { apiClient } from '../../lib/apiClient';
 import type { ApiSuccess, Folder, FolderChildren } from '../../types/api';
 
@@ -29,3 +36,4 @@ export async function deleteFolder(id: number): Promise<void> {
 export async function restoreFolder(id: number): Promise<void> {
   await apiClient.post(`/folders/${id}/restore`);
 }
+

@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 namespace App\Exceptions;
 
 /**
@@ -13,3 +20,4 @@ class DocumentNotFoundException extends ApiException
         parent::__construct(404, 'DOCUMENT_NOT_FOUND', $message);
     }
 }
+

@@ -1,3 +1,10 @@
+/**
+ * Secure Cloud Document Manager
+ * Copyright (c) 2026 Arsi India Info. All rights reserved.
+ * Licensed under the MIT License -- see LICENSE. The "Arsi India Info"
+ * name and logo are separately protected -- see TRADEMARK.md.
+ */
+
 // Mirrors the backend's response/error envelope exactly (§13) — every API
 // call in the app is typed against one of these three shapes, never a raw
 // unwrapped payload.
@@ -159,3 +166,4 @@ export interface AuditLogEntry {
   details: Record<string, unknown> | null;
   createdAt: string;
 }
+
