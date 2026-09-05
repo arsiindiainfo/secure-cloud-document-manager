@@ -10,7 +10,6 @@
 namespace App\Libraries;
 
 use Config\Recaptcha as RecaptchaConfig;
-use Config\Services;
 use Throwable;
 
 /**
@@ -19,6 +18,14 @@ use Throwable;
  * existing per-IP rate limit). Skipped entirely in the `testing`
  * environment: PHPUnit can't solve a real captcha, and there is no value
  * in this making a real network call to Google on every test run.
+ *
+ * Uses PHP's curl extension directly rather than CodeIgniter's
+ * `Services::curlrequest()` wrapper: on demo2, every request sent through
+ * that wrapper was rejected by Google with `invalid-input-response` for an
+ * otherwise-valid, freshly-solved token, while an identical request built
+ * with raw curl_exec() against the same secret/token succeeded every time.
+ * The exact option this framework wrapper sets that Google's siteverify
+ * endpoint objects to was never pinned down; raw curl sidesteps it.
  */
 class RecaptchaVerifier
 {
@@ -39,23 +46,31 @@ class RecaptchaVerifier
         }
 
         try {
-            $response = Services::curlrequest()->request('POST', self::VERIFY_URL, [
-                'form_params' => array_filter([
-                    'secret'   => $this->config->secretKey,
-                    'response' => $token,
-                    'remoteip' => $remoteIp,
-                ]),
+            $postFields = http_build_query(array_filter([
+                'secret'   => $this->config->secretKey,
+                'response' => $token,
+                'remoteip' => $remoteIp,
+            ]));
+
+            $ch = curl_init(self::VERIFY_URL);
+            curl_setopt_array($ch, [
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => $postFields,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 10,
             ]);
+            $body = curl_exec($ch);
 
-            $result = json_decode((string) $response->getBody(), true);
+            if ($body === false) {
+                log_message('error', 'reCAPTCHA verification request failed: ' . curl_error($ch));
+                curl_close($ch);
 
-            // TEMPORARY debug logging — remove once the RECAPTCHA_FAILED
-            // investigation on demo2 is resolved. Logs only the boolean
-            // outcome and Google's error-codes, never the token itself.
-            if (($result['success'] ?? false) !== true) {
-                log_message('error', 'reCAPTCHA siteverify failed — error-codes: '
-                    . json_encode($result['error-codes'] ?? []));
+                return false;
             }
+
+            curl_close($ch);
+
+            $result = json_decode((string) $body, true);
 
             return (bool) ($result['success'] ?? false);
         } catch (Throwable $e) {
