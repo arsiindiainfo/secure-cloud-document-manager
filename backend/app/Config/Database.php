@@ -201,6 +201,11 @@ class Database extends Config
     {
         parent::__construct();
 
+        // TEMPORARY debug logging — remove once the demo2
+        // "Unable to connect to the database" investigation is resolved.
+        log_message('error', 'DB config resolved — hostname: [' . $this->default['hostname']
+            . '] port: [' . $this->default['port'] . '] database: [' . $this->default['database'] . ']');
+
         // Ensure that we always set the database group to 'tests' if
         // we are currently running an automated test suite, so that
         // we don't overwrite live data on accident.
