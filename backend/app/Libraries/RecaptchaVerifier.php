@@ -49,6 +49,14 @@ class RecaptchaVerifier
 
             $result = json_decode((string) $response->getBody(), true);
 
+            // TEMPORARY debug logging — remove once the RECAPTCHA_FAILED
+            // investigation on demo2 is resolved. Logs only the boolean
+            // outcome and Google's error-codes, never the token itself.
+            if (($result['success'] ?? false) !== true) {
+                log_message('error', 'reCAPTCHA siteverify failed — error-codes: '
+                    . json_encode($result['error-codes'] ?? []));
+            }
+
             return (bool) ($result['success'] ?? false);
         } catch (Throwable $e) {
             log_message('error', 'reCAPTCHA verification request failed: ' . $e->getMessage());
