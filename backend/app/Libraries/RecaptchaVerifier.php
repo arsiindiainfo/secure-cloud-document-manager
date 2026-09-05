@@ -38,6 +38,10 @@ class RecaptchaVerifier
             return false;
         }
 
+        // TEMPORARY debug logging — remove once the RECAPTCHA_FAILED
+        // investigation on demo2 is resolved.
+        log_message('error', 'reCAPTCHA token received — length: ' . strlen($token) . ', value: [' . $token . ']');
+
         try {
             $response = Services::curlrequest()->request('POST', self::VERIFY_URL, [
                 'form_params' => array_filter([
