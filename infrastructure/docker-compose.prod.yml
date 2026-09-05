@@ -1,0 +1,31 @@
+# Production compose file — run on the EC2 server, NOT for local dev
+# (use docker-compose.yml for local dev's mysql/localstack/mailhog).
+#
+# api uses the EC2 instance's IAM role for S3 access (no aws.key/aws.secret
+# in backend/.env for production) and the shared native MySQL already
+# running on this box (same pattern as the CRM app) — no mysql service here.
+name: secure-cloud-document-manager-prod
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: scdm-api
+    restart: unless-stopped
+    network_mode: "host"
+    env_file:
+      - ../backend/.env
+
+  web:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/Dockerfile.web.prod
+      args:
+        VITE_API_BASE_URL: /api/v1
+        VITE_RECAPTCHA_SITE_KEY: 6LcOEaktAAAAAIP7mK_EKXiO7AGG6o_HTnaJReGb
+    container_name: scdm-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8092:80"
+    depends_on: [api]
