@@ -21,10 +21,22 @@ class Recaptcha extends BaseConfig
 {
     public string $secretKey = '';
 
+    /**
+     * Kill switch, defaults OFF. On demo2, Google's siteverify rejected
+     * every check made through CodeIgniter's HTTP client with
+     * invalid-input-response for otherwise-valid tokens, and switching to
+     * raw curl (see RecaptchaVerifier) didn't resolve it either — disabled
+     * here until that's root-caused. Flip on by setting
+     * `recaptcha.enabled=true` in .env once it's fixed; the secret key
+     * stays configured below in the meantime.
+     */
+    public bool $enabled = false;
+
     public function __construct()
     {
         parent::__construct();
 
         $this->secretKey = (string) env('recaptcha.secretKey', '');
+        $this->enabled   = filter_var(env('recaptcha.enabled', false), FILTER_VALIDATE_BOOLEAN);
     }
 }

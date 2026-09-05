@@ -37,7 +37,7 @@ class RecaptchaVerifier
 
     public function verify(?string $token, ?string $remoteIp): bool
     {
-        if (ENVIRONMENT === 'testing') {
+        if (ENVIRONMENT === 'testing' || ! $this->config->enabled) {
             return true;
         }
 

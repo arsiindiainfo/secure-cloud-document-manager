@@ -23,7 +23,12 @@ services:
       dockerfile: infrastructure/docker/Dockerfile.web.prod
       args:
         VITE_API_BASE_URL: /api/v1
-        VITE_RECAPTCHA_SITE_KEY: 6LcOEaktAAAAAIP7mK_EKXiO7AGG6o_HTnaJReGb
+        # Blank for now — Recaptcha.tsx renders nothing without a site key.
+        # See backend/app/Config/Recaptcha.php: siteverify rejected every
+        # check on demo2 regardless of HTTP client used; disabled until
+        # root-caused. Restore 6LcOEaktAAAAAIP7mK_EKXiO7AGG6o_HTnaJReGb
+        # here (and recaptcha.enabled=true in backend/.env) once fixed.
+        VITE_RECAPTCHA_SITE_KEY: ""
     container_name: scdm-web
     restart: unless-stopped
     ports:
