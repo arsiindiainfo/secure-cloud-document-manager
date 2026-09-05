@@ -49,6 +49,10 @@ class RecaptchaVerifier
 
             $result = json_decode((string) $response->getBody(), true);
 
+            // TEMPORARY debug logging — remove once the RECAPTCHA_FAILED
+            // investigation on demo2 is resolved.
+            log_message('error', 'reCAPTCHA siteverify raw response: ' . (string) $response->getBody());
+
             return (bool) ($result['success'] ?? false);
         } catch (Throwable $e) {
             log_message('error', 'reCAPTCHA verification request failed: ' . $e->getMessage());
