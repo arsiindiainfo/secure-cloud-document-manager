@@ -205,6 +205,10 @@ class Database extends Config
         // "Unable to connect to the database" investigation is resolved.
         log_message('error', 'DB config resolved — hostname: [' . $this->default['hostname']
             . '] port: [' . $this->default['port'] . '] database: [' . $this->default['database'] . ']');
+        log_message('error', 'DB config debug — override: [' . var_export(\CodeIgniter\Config\BaseConfig::$override, true)
+            . '] getenv: [' . var_export(getenv('database.default.hostname'), true)
+            . '] _SERVER: [' . var_export($_SERVER['database.default.hostname'] ?? '(unset)', true)
+            . '] _ENV: [' . var_export($_ENV['database.default.hostname'] ?? '(unset)', true) . ']');
 
         // Ensure that we always set the database group to 'tests' if
         // we are currently running an automated test suite, so that
