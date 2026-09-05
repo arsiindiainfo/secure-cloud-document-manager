@@ -1,0 +1,4 @@
+# Local Lambda deployment artifact — built on demand from the committed
+# source (index.js + node_modules), uploaded manually via the Lambda
+# console. Never needs to be committed.
+infrastructure/aws/lambda/processing-worker-deploy.zip
