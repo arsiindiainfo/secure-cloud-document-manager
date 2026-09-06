@@ -261,24 +261,35 @@ class DocumentModel extends Model
             return (int) $row['total'];
         }
 
+        // MySQL 8.4 rejects a second, non-recursive CTE sharing a
+        // `WITH RECURSIVE` clause with a recursive one (a genuine parser
+        // restriction, confirmed directly against this server — not a
+        // documented ANSI rule this codebase was relying on incorrectly
+        // elsewhere, since sp_document_search's single-CTE-in-a-derived-
+        // table form, used again here, is unaffected). This never
+        // surfaced before because no non-ADMIN user had exercised the
+        // dashboard until self-registration existed.
         $row = $this->db->query(<<<'SQL'
-            WITH RECURSIVE granted_folders AS (
-              SELECT folder_id AS id FROM document_permissions
-                WHERE user_id = ? AND folder_id IS NOT NULL
-              UNION ALL
-              SELECT f.id FROM folders f
-              JOIN granted_folders gf ON f.parent_folder_id = gf.id
-              WHERE f.deleted_at IS NULL
-            ),
-            accessible AS (
-              SELECT document_id AS id FROM document_permissions WHERE user_id = ? AND document_id IS NOT NULL
-              UNION
-              SELECT doc.id FROM documents doc JOIN granted_folders gf ON gf.id = doc.folder_id
-            )
             SELECT COALESCE(SUM(v.size_bytes), 0) AS total
-            FROM accessible a
-            JOIN documents d ON d.id = a.id AND d.deleted_at IS NULL
+            FROM documents d
             JOIN document_versions v ON v.document_id = d.id AND v.is_current = 1
+            WHERE d.deleted_at IS NULL
+              AND (
+                d.id IN (SELECT document_id FROM document_permissions WHERE user_id = ? AND document_id IS NOT NULL)
+                OR d.folder_id IN (
+                  SELECT id FROM (
+                    WITH RECURSIVE granted_folders AS (
+                      SELECT folder_id AS id FROM document_permissions
+                        WHERE user_id = ? AND folder_id IS NOT NULL
+                      UNION ALL
+                      SELECT f.id FROM folders f
+                      JOIN granted_folders gf ON f.parent_folder_id = gf.id
+                      WHERE f.deleted_at IS NULL
+                    )
+                    SELECT id FROM granted_folders
+                  ) af
+                )
+              )
         SQL, [$userId, $userId])->getRowArray();
 
         return (int) $row['total'];
