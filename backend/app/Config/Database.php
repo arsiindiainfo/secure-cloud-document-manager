@@ -210,6 +210,9 @@ class Database extends Config
         // explicitly in their own constructor (e.g. Config\Recaptcha).
         // Reading them explicitly here sidesteps whatever that mismatch
         // is, the same way Recaptcha already does.
+        log_message('error', 'DB config env() probe — raw call result: ['
+            . var_export(env('database.default.hostname', '__FALLBACK_MARKER__'), true) . ']');
+
         $this->default['hostname'] = env('database.default.hostname', $this->default['hostname']);
         $this->default['port']     = (int) env('database.default.port', $this->default['port']);
         $this->default['username'] = env('database.default.username', $this->default['username']);
