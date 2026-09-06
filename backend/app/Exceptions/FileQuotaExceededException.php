@@ -11,12 +11,14 @@ namespace App\Exceptions;
 
 use App\Constants\Quotas;
 
-class FileTooLargeException extends ApiException
+class FileQuotaExceededException extends ApiException
 {
     public function __construct()
     {
-        $limitMb = (int) (Quotas::MAX_FILE_SIZE_BYTES / 1024 / 1024);
-        parent::__construct(400, 'FILE_TOO_LARGE', "Files can be at most {$limitMb}MB.");
+        parent::__construct(
+            409,
+            'FILE_QUOTA_EXCEEDED',
+            'You can have at most ' . Quotas::MAX_FILES_PER_USER . ' files at a time — delete one to free up a slot.',
+        );
     }
 }
-

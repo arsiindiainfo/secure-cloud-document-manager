@@ -178,5 +178,11 @@ class FolderModel extends Model
             ->orderBy('folders.deleted_at', 'desc')
             ->findAll();
     }
+
+    /** Quota check (§Quotas) — how many currently-non-deleted folders this user has created. */
+    public function activeCountForUser(int $userId): int
+    {
+        return $this->where('created_by', $userId)->countAllResults();
+    }
 }
 

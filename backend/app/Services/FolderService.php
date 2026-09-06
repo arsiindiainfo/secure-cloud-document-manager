@@ -9,8 +9,10 @@
 
 namespace App\Services;
 
+use App\Constants\Quotas;
 use App\Entities\Folder;
 use App\Exceptions\FolderNotFoundException;
+use App\Exceptions\FolderQuotaExceededException;
 use App\Exceptions\ForbiddenActionException;
 use App\Libraries\PermissionResolver;
 use App\Models\AuditLogModel;
@@ -77,6 +79,10 @@ class FolderService
         // start. Non-root still requires an EDITOR+ grant on the parent.
         if ($parentFolderId !== null) {
             $this->authorize($parentFolderId, 'EDITOR');
+        }
+
+        if ($this->folders->activeCountForUser($auth->userId()) >= Quotas::MAX_FOLDERS_PER_USER) {
+            throw new FolderQuotaExceededException();
         }
 
         $id = $this->folders->create($name, $parentFolderId, $auth->userId());

@@ -27,7 +27,8 @@ export const ALLOWED_MIME_TYPES = [
   'application/zip',
 ];
 
-export const MAX_UPLOAD_SIZE_BYTES = 25 * 1024 * 1024;
+// Mirrors backend/app/Constants/Quotas.php's MAX_FILE_SIZE_BYTES.
+export const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 
 // Human-readable — shown next to the upload control so a rejected file
 // (§22.6's "File type not supported") isn't a dead end.

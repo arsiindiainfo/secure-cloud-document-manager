@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import * as api from './api';
 import { folderChildrenKey } from '../browser/hooks';
-import { ALLOWED_MIME_TYPES, MAX_UPLOAD_SIZE_BYTES } from '../../lib/fileTypes';
+import { ALLOWED_MIME_TYPES, ALLOWED_EXTENSIONS_LABEL, MAX_UPLOAD_SIZE_BYTES } from '../../lib/fileTypes';
 import { uploadWithProgress, sha256Hex } from '../../lib/uploadWithProgress';
 import { apiErrorMessage } from '../../lib/apiError';
 
@@ -41,11 +41,11 @@ export function useDocumentUpload(folderId: number) {
     setItems((prev) => ({ ...prev, [key]: { key, file, progress: 0, status: 'pending' } }));
 
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      patch(key, { status: 'error', error: 'File type not supported' });
+      patch(key, { status: 'error', error: `File type not supported — allowed: ${ALLOWED_EXTENSIONS_LABEL}` });
       return;
     }
     if (file.size > MAX_UPLOAD_SIZE_BYTES) {
-      patch(key, { status: 'error', error: 'File too large (max 25MB)' });
+      patch(key, { status: 'error', error: 'File too large (max 10MB)' });
       return;
     }
 

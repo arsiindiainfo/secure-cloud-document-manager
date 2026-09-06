@@ -36,7 +36,8 @@ final class FileTypes
         'application/zip',
     ];
 
-    public const MAX_UPLOAD_SIZE_BYTES = 25 * 1024 * 1024;
+    // Per-file size limit lives in Quotas::MAX_FILE_SIZE_BYTES — it's a
+    // quota concern, not a file-type one, so it doesn't belong here.
 
     /** §22.4 — inline preview for PDF/image; everything else falls back to a thumbnail or download-only. */
     public const INLINE_PREVIEWABLE_MIME_TYPES = [

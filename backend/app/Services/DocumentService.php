@@ -10,11 +10,14 @@
 namespace App\Services;
 
 use App\Constants\FileTypes;
+use App\Constants\Quotas;
 use App\DTOs\PaginationRequestDTO;
 use App\Entities\Document;
 use App\Entities\DocumentVersion;
 use App\Exceptions\DocumentNotFoundException;
+use App\Exceptions\FileQuotaExceededException;
 use App\Exceptions\FileTooLargeException;
+use App\Exceptions\StorageQuotaExceededException;
 use App\Exceptions\ThumbnailNotReadyException;
 use App\Exceptions\UnsupportedFileTypeException;
 use App\Exceptions\ValidationException;
@@ -107,6 +110,7 @@ class DocumentService
     {
         $this->folderService->authorize($folderId, 'EDITOR');
         $safeName = $this->assertValidFile($fileName, $mimeType, $sizeBytes);
+        $this->assertWithinQuota(Services::authContext()->userId(), $sizeBytes, isNewDocument: true);
 
         $uploadToken = bin2hex(random_bytes(16));
         $s3Key       = "documents/{$folderId}/{$uploadToken}/{$safeName}";
@@ -119,6 +123,7 @@ class DocumentService
     {
         $document = $this->authorize($documentId, 'EDITOR');
         $safeName = $this->assertValidFile($fileName, $mimeType, $sizeBytes);
+        $this->assertWithinQuota(Services::authContext()->userId(), $sizeBytes, isNewDocument: false);
 
         $uploadToken = bin2hex(random_bytes(16));
         $s3Key       = "documents/{$document->folder_id}/{$documentId}/{$uploadToken}/{$safeName}";
@@ -335,7 +340,7 @@ class DocumentService
             throw new UnsupportedFileTypeException();
         }
 
-        if ($sizeBytes > FileTypes::MAX_UPLOAD_SIZE_BYTES) {
+        if ($sizeBytes > Quotas::MAX_FILE_SIZE_BYTES) {
             throw new FileTooLargeException();
         }
 
@@ -346,6 +351,25 @@ class DocumentService
         $ext  = FileTypes::EXTENSION_BY_MIME_TYPE[$mimeType];
 
         return str_ends_with(strtolower($safe), '.' . $ext) ? $safe : "{$safe}.{$ext}";
+    }
+
+    /**
+     * §Quotas — checked at initiate time (before the presigned PUT is even
+     * issued), using the size the client declares. completeUpload() trusts
+     * S3's own HeadObject for the real size, same as it always did; this
+     * is just the "don't even hand out an upload URL" gate.
+     */
+    private function assertWithinQuota(int $userId, int $incomingSizeBytes, bool $isNewDocument): void
+    {
+        $usage = $this->documents->ownUsage($userId);
+
+        if ($isNewDocument && $usage['count'] >= Quotas::MAX_FILES_PER_USER) {
+            throw new FileQuotaExceededException();
+        }
+
+        if ($usage['totalBytes'] + $incomingSizeBytes > Quotas::MAX_TOTAL_STORAGE_BYTES) {
+            throw new StorageQuotaExceededException();
+        }
     }
 
     private function assertKeyBelongsToFolder(string $s3Key, int $folderId): void

@@ -9,21 +9,38 @@
 
 namespace App\Services;
 
+use App\Constants\Quotas;
 use App\Models\DocumentModel;
+use App\Models\FolderModel;
 use Config\Services;
 
 /**
- * §22.2 — recently accessed documents, a storage-used summary, and folders
- * shared with the caller (not created by them). All three are plain
- * read-only aggregates (§5) — nothing here writes or enforces a business rule.
+ * §22.2 — recently accessed documents, a storage-used summary, folders
+ * shared with the caller (not created by them), and their own quota usage.
+ * All plain read-only aggregates (§5) — nothing here writes or enforces a
+ * business rule (the actual quota enforcement lives in FolderService and
+ * DocumentService, at create/upload time).
  */
 class DashboardService
 {
-    public function __construct(private readonly DocumentModel $documents = new DocumentModel())
-    {
+    public function __construct(
+        private readonly DocumentModel $documents = new DocumentModel(),
+        private readonly FolderModel $folders = new FolderModel(),
+    ) {
     }
 
-    /** @return array{recentDocuments: list<array<string, mixed>>, storageUsedBytes: int, sharedFolders: list<array<string, mixed>>} */
+    /**
+     * @return array{
+     *     recentDocuments: list<array<string, mixed>>,
+     *     storageUsedBytes: int,
+     *     sharedFolders: list<array<string, mixed>>,
+     *     quotas: array{
+     *         folders: array{used: int, limit: int},
+     *         files: array{used: int, limit: int},
+     *         storageBytes: array{used: int, limit: int}
+     *     }
+     * }
+     */
     public function summary(): array
     {
         $auth = Services::authContext();
@@ -47,6 +64,8 @@ class DashboardService
             LIMIT 10
         SQL, [$auth->userId(), $auth->userId()])->getResultArray();
 
+        $ownUsage = $this->documents->ownUsage($auth->userId());
+
         return [
             'recentDocuments' => array_map(static fn (array $row): array => [
                 'documentId' => (int) $row['document_id'],
@@ -60,6 +79,11 @@ class DashboardService
                 'id'   => (int) $row['id'],
                 'name' => $row['name'],
             ], $sharedRows),
+            'quotas' => [
+                'folders'      => ['used' => $this->folders->activeCountForUser($auth->userId()), 'limit' => Quotas::MAX_FOLDERS_PER_USER],
+                'files'        => ['used' => $ownUsage['count'], 'limit' => Quotas::MAX_FILES_PER_USER],
+                'storageBytes' => ['used' => $ownUsage['totalBytes'], 'limit' => Quotas::MAX_TOTAL_STORAGE_BYTES],
+            ],
         ];
     }
 }

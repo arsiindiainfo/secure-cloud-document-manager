@@ -23,6 +23,27 @@ function activityLabel(action: RecentDocumentActivity['action']): string {
   }
 }
 
+function QuotaBar({ label, used, limit, formatUsed }: { label: string; used: number; limit: number; formatUsed?: (n: number) => string }) {
+  const pct = Math.min(100, Math.round((used / limit) * 100));
+  const nearLimit = pct >= 90;
+  return (
+    <div>
+      <div className="mb-1 flex items-baseline justify-between text-xs">
+        <span className="text-slate-500 dark:text-slate-400">{label}</span>
+        <span className={nearLimit ? 'font-medium text-red-600' : 'text-slate-500 dark:text-slate-400'}>
+          {formatUsed ? formatUsed(used) : used} / {formatUsed ? formatUsed(limit) : limit}
+        </span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+        <div
+          className={`h-full rounded-full ${nearLimit ? 'bg-red-500' : 'bg-blue-500'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // §22.2 — recent activity, storage summary, and shared-folder quick links.
 export function DashboardPage() {
   const { user } = useAuth();
@@ -56,6 +77,22 @@ export function DashboardPage() {
 
         {isError && (
           <p className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">Couldn't load the dashboard.</p>
+        )}
+
+        {data && (
+          <section className="mb-6 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+            <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Your usage</h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <QuotaBar label="Folders" used={data.quotas.folders.used} limit={data.quotas.folders.limit} />
+              <QuotaBar label="Files" used={data.quotas.files.used} limit={data.quotas.files.limit} />
+              <QuotaBar
+                label="Storage"
+                used={data.quotas.storageBytes.used}
+                limit={data.quotas.storageBytes.limit}
+                formatUsed={formatBytes}
+              />
+            </div>
+          </section>
         )}
 
         {isEmpty && (

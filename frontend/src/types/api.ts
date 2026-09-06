@@ -153,10 +153,20 @@ export interface SharedFolderSummary {
   name: string;
 }
 
+export interface QuotaUsage {
+  used: number;
+  limit: number;
+}
+
 export interface DashboardSummary {
   recentDocuments: RecentDocumentActivity[];
   storageUsedBytes: number;
   sharedFolders: SharedFolderSummary[];
+  quotas: {
+    folders: QuotaUsage;
+    files: QuotaUsage;
+    storageBytes: QuotaUsage;
+  };
 }
 
 export interface AuditLogEntry {

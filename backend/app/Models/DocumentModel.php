@@ -294,5 +294,26 @@ class DocumentModel extends Model
 
         return (int) $row['total'];
     }
+
+    /**
+     * Quota check (§Quotas) — the user's *own* current (non-deleted)
+     * documents and the bytes their current versions hold, regardless of
+     * who else can access them. Deliberately not accessibleStorageBytes()
+     * above: that includes documents this user can merely *view* through
+     * an inherited grant, which isn't what "their" upload quota means.
+     *
+     * @return array{count: int, totalBytes: int}
+     */
+    public function ownUsage(int $userId): array
+    {
+        $row = $this->db->query(<<<'SQL'
+            SELECT COUNT(*) AS count, COALESCE(SUM(v.size_bytes), 0) AS total_bytes
+            FROM documents d
+            JOIN document_versions v ON v.document_id = d.id AND v.is_current = 1
+            WHERE d.deleted_at IS NULL AND d.created_by = ?
+        SQL, [$userId])->getRowArray();
+
+        return ['count' => (int) $row['count'], 'totalBytes' => (int) $row['total_bytes']];
+    }
 }
 
