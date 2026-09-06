@@ -10,7 +10,10 @@
 namespace App\Services;
 
 use App\Entities\User;
+use App\Exceptions\ForbiddenActionException;
+use App\Exceptions\UserNotFoundException;
 use App\Libraries\EmailTemplate;
+use App\Models\AuditLogModel;
 use App\Models\RefreshTokenModel;
 use App\Models\UserModel;
 use Config\Services;
@@ -22,9 +25,13 @@ use Config\Services;
  */
 class UsersService
 {
+    /** The one account no ADMIN — including itself — can delete. */
+    private const SUPER_ADMIN_EMAIL = 'arsi.india.info@gmail.com';
+
     public function __construct(
         private readonly UserModel $users = new UserModel(),
         private readonly RefreshTokenModel $refreshTokens = new RefreshTokenModel(),
+        private readonly AuditLogModel $auditLog = new AuditLogModel(),
     ) {
     }
 
@@ -71,6 +78,34 @@ class UsersService
         $user = $this->users->find($userId);
 
         return $user;
+    }
+
+    /**
+     * Soft delete (not hard) — sp_user_authenticate already excludes
+     * deleted_at rows, so this immediately blocks login and drops the user
+     * out of the admin's list, without risking an FK failure against every
+     * folder/document/version they've ever created (those keep an intact,
+     * historical creator reference — same reasoning as everywhere else in
+     * this app that soft-deletes instead of purging).
+     */
+    public function delete(int $userId, int $requestedBy): void
+    {
+        if ($userId === $requestedBy) {
+            throw new ForbiddenActionException('You cannot delete your own account.');
+        }
+
+        $user = $this->users->find($userId);
+        if ($user === null) {
+            throw new UserNotFoundException('No user was found with this id.');
+        }
+
+        if (strcasecmp($user->email, self::SUPER_ADMIN_EMAIL) === 0) {
+            throw new ForbiddenActionException('This account cannot be deleted.');
+        }
+
+        $this->users->delete($userId);
+        $this->refreshTokens->revokeAllForUser($userId);
+        $this->auditLog->record($requestedBy, 'USER_DELETED', 'USER', $userId, ['email' => $user->email]);
     }
 
     private function sendInviteEmail(string $email, string $name, string $temporaryPassword): void

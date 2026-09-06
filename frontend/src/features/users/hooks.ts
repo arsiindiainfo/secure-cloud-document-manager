@@ -36,3 +36,11 @@ export function useUpdateUser(page: number, limit: number) {
   });
 }
 
+export function useDeleteUser(page: number, limit: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteUser(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: usersKey(page, limit) }),
+  });
+}
+

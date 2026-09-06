@@ -8,22 +8,32 @@
 import { useState } from 'react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { apiErrorMessage } from '../../lib/apiError';
-import { useUsers, useInviteUser, useUpdateUser } from './hooks';
+import { useAuth } from '../auth/useAuth';
+import { useUsers, useInviteUser, useUpdateUser, useDeleteUser } from './hooks';
 import { InviteUserDialog } from './InviteUserDialog';
 import type { Role, User } from '../../types/api';
 
 const PAGE_SIZE = 20;
 
+// The one account that can never be deleted from this screen, no matter who
+// is signed in as ADMIN — mirrors the same guard the backend enforces
+// (UsersService::delete), kept here purely so the button doesn't even
+// appear rather than appearing and then failing.
+const SUPER_ADMIN_EMAIL = 'arsi.india.info@gmail.com';
+
 // §22.10 — ADMIN only (route-gated by RequireRole in router.tsx). Invite
 // (no password field — the server emails one) plus per-row role/status edits.
 export function UserManagementPage() {
+  const { user: currentUser } = useAuth();
   const [page, setPage] = useState(1);
   const { data, isLoading, isError } = useUsers(page, PAGE_SIZE);
   const inviteUser = useInviteUser(page, PAGE_SIZE);
   const updateUser = useUpdateUser(page, PAGE_SIZE);
+  const deleteUser = useDeleteUser(page, PAGE_SIZE);
 
   const [showInvite, setShowInvite] = useState(false);
   const [disableTarget, setDisableTarget] = useState<User | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [rowError, setRowError] = useState<{ id: number; message: string } | null>(null);
 
   const users = data?.items ?? [];
@@ -60,6 +70,18 @@ export function UserManagementPage() {
       setRowError({ id: target.id, message: apiErrorMessage(err, 'Could not disable user') });
     } finally {
       setDisableTarget(null);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    try {
+      await deleteUser.mutateAsync(target.id);
+      setDeleteTarget(null);
+    } catch (err) {
+      setRowError({ id: target.id, message: apiErrorMessage(err, 'Could not delete user') });
+      setDeleteTarget(null);
     }
   }
 
@@ -132,15 +154,26 @@ export function UserManagementPage() {
                       </span>
                     </td>
                     <td className="px-4 py-2 text-right">
-                      <button
-                        onClick={() => void handleToggleStatus(user)}
-                        disabled={updateUser.isPending}
-                        className={`text-xs hover:underline disabled:opacity-60 ${
-                          user.status === 'ACTIVE' ? 'text-red-600' : 'text-blue-600'
-                        }`}
-                      >
-                        {user.status === 'ACTIVE' ? 'Disable' : 'Enable'}
-                      </button>
+                      <div className="flex justify-end gap-3">
+                        <button
+                          onClick={() => void handleToggleStatus(user)}
+                          disabled={updateUser.isPending}
+                          className={`text-xs hover:underline disabled:opacity-60 ${
+                            user.status === 'ACTIVE' ? 'text-red-600' : 'text-blue-600'
+                          }`}
+                        >
+                          {user.status === 'ACTIVE' ? 'Disable' : 'Enable'}
+                        </button>
+                        {user.email.toLowerCase() !== SUPER_ADMIN_EMAIL && user.id !== currentUser?.id && (
+                          <button
+                            onClick={() => setDeleteTarget(user)}
+                            disabled={deleteUser.isPending}
+                            className="text-xs text-red-600 hover:underline disabled:opacity-60"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
                       {rowError?.id === user.id && <p className="mt-1 text-xs text-red-600">{rowError.message}</p>}
                     </td>
                   </tr>
@@ -183,6 +216,16 @@ export function UserManagementPage() {
           confirmLabel="Disable"
           onConfirm={confirmDisable}
           onCancel={() => setDisableTarget(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title={`Delete ${deleteTarget.name}?`}
+          message="They will be signed out immediately and can no longer sign in. Folders and documents they created are kept."
+          confirmLabel="Delete"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
         />
       )}
     </div>

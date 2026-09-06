@@ -39,5 +39,43 @@ class TrashController extends BaseController
     {
         return $this->ok((new TrashService())->list());
     }
+
+    #[OA\Delete(
+        path: '/trash/documents/{id}',
+        tags: ['Trash'],
+        summary: 'Permanently delete a trashed document — S3 objects and DB rows, irreversible (OWNER)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\PathParameter(name: 'id', schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Permanently deleted'),
+            new OA\Response(response: 404, description: '404 DOCUMENT_NOT_FOUND', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 409, description: '409 NOT_IN_TRASH', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+        ],
+    )]
+    public function purgeDocument(int $documentId): ResponseInterface
+    {
+        (new TrashService())->purgeDocument($documentId);
+
+        return $this->ok(['message' => 'Document permanently deleted.']);
+    }
+
+    #[OA\Delete(
+        path: '/trash/folders/{id}',
+        tags: ['Trash'],
+        summary: 'Permanently delete a trashed folder and everything under it, irreversible (OWNER)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\PathParameter(name: 'id', schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Permanently deleted'),
+            new OA\Response(response: 404, description: '404 FOLDER_NOT_FOUND', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 409, description: '409 NOT_IN_TRASH', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+        ],
+    )]
+    public function purgeFolder(int $folderId): ResponseInterface
+    {
+        (new TrashService())->purgeFolder($folderId);
+
+        return $this->ok(['message' => 'Folder permanently deleted.']);
+    }
 }
 

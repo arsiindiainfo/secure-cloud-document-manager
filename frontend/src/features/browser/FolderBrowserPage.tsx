@@ -41,6 +41,12 @@ export function FolderBrowserPage() {
   const [deleteTarget, setDeleteTarget] = useState<Folder | null>(null);
   const [renameTarget, setRenameTarget] = useState<Folder | null>(null);
   const [openDocumentId, setOpenDocumentId] = useState<number | null>(null);
+  const [autoOpenShare, setAutoOpenShare] = useState(false);
+
+  function openDocumentShare(id: number) {
+    setAutoOpenShare(true);
+    setOpenDocumentId(id);
+  }
 
   function openFolder(id: number) {
     navigate(`/browse/${id}`);
@@ -174,6 +180,15 @@ export function FolderBrowserPage() {
                     <DocumentIcon /> {doc.name}
                     <span className="text-xs text-slate-400">v{doc.currentVersion}</span>
                   </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openDocumentShare(doc.id);
+                    }}
+                    className="text-xs text-slate-500 hover:underline dark:text-slate-400"
+                  >
+                    Share
+                  </button>
                 </li>
               ))}
             </ul>
@@ -211,7 +226,15 @@ export function FolderBrowserPage() {
       )}
 
       {openDocumentId !== null && folderId !== null && (
-        <DocumentDetailPanel documentId={openDocumentId} folderId={folderId} onClose={() => setOpenDocumentId(null)} />
+        <DocumentDetailPanel
+          documentId={openDocumentId}
+          folderId={folderId}
+          autoOpenShare={autoOpenShare}
+          onClose={() => {
+            setOpenDocumentId(null);
+            setAutoOpenShare(false);
+          }}
+        />
       )}
     </div>
   );

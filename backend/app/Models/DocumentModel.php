@@ -15,6 +15,7 @@ use App\Exceptions\DocumentNotFoundException;
 use App\Exceptions\DuplicateNameException;
 use App\Exceptions\FolderNotFoundException;
 use App\Exceptions\InternalErrorException;
+use App\Exceptions\NotInTrashException;
 use App\Exceptions\ParentFolderNotFoundException;
 use App\Libraries\StoredProcedure;
 use CodeIgniter\Model;
@@ -107,6 +108,21 @@ class DocumentModel extends Model
             'OK'                 => null,
             'DOCUMENT_NOT_FOUND' => throw new DocumentNotFoundException(),
             default              => throw new InternalErrorException($out['p_message'] ?? 'Failed to delete document.'),
+        };
+    }
+
+    /** Caller must delete this document's version S3 objects first — see TrashService::purgeDocument(). */
+    public function hardDelete(int $documentId, int $deletedBy): void
+    {
+        $out = (new StoredProcedure($this->db))->call('sp_document_hard_delete', [
+            $documentId, $deletedBy,
+        ], ['p_status_code', 'p_message']);
+
+        match ($out['p_status_code']) {
+            'OK'                 => null,
+            'DOCUMENT_NOT_FOUND' => throw new DocumentNotFoundException(),
+            'NOT_IN_TRASH'       => throw new NotInTrashException(),
+            default              => throw new InternalErrorException($out['p_message'] ?? 'Failed to permanently delete document.'),
         };
     }
 

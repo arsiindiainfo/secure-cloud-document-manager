@@ -129,5 +129,24 @@ class UsersController extends BaseController
 
         return $this->ok($user);
     }
+
+    #[OA\Delete(
+        path: '/users/{id}',
+        tags: ['Users'],
+        summary: 'Delete a user (ADMIN) — blocked for the caller\'s own account and one protected super-admin account',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\PathParameter(name: 'id', schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Deleted'),
+            new OA\Response(response: 403, description: '403 FORBIDDEN_ROLE — own account or the protected super-admin', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+            new OA\Response(response: 404, description: '404 USER_NOT_FOUND', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+        ],
+    )]
+    public function delete(int $id): ResponseInterface
+    {
+        (new UsersService())->delete($id, service('authContext')->userId());
+
+        return $this->ok(['message' => 'User deleted.']);
+    }
 }
 

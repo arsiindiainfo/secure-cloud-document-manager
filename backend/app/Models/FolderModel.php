@@ -14,6 +14,7 @@ use App\Exceptions\CycleDetectedException;
 use App\Exceptions\DuplicateNameException;
 use App\Exceptions\FolderNotFoundException;
 use App\Exceptions\InternalErrorException;
+use App\Exceptions\NotInTrashException;
 use App\Exceptions\ParentFolderNotFoundException;
 use App\Libraries\StoredProcedure;
 use CodeIgniter\Model;
@@ -72,6 +73,26 @@ class FolderModel extends Model
             'OK'               => (int) $out['p_affected_count'],
             'FOLDER_NOT_FOUND' => throw new FolderNotFoundException(),
             default            => throw new InternalErrorException($out['p_message'] ?? 'Failed to delete folder.'),
+        };
+    }
+
+    /**
+     * Caller must delete every S3 object in the subtree first — see
+     * TrashService::purgeFolder().
+     *
+     * @return int total folders + documents permanently removed
+     */
+    public function hardDelete(int $folderId, int $deletedBy): int
+    {
+        $out = (new StoredProcedure($this->db))->call('sp_folder_hard_delete', [
+            $folderId, $deletedBy,
+        ], ['p_affected_count', 'p_status_code', 'p_message']);
+
+        return match ($out['p_status_code']) {
+            'OK'               => (int) $out['p_affected_count'],
+            'FOLDER_NOT_FOUND' => throw new FolderNotFoundException(),
+            'NOT_IN_TRASH'     => throw new NotInTrashException(),
+            default            => throw new InternalErrorException($out['p_message'] ?? 'Failed to permanently delete folder.'),
         };
     }
 

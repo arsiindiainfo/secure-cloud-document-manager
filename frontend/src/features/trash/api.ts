@@ -13,3 +13,11 @@ export async function fetchTrash(): Promise<TrashListing> {
   return data.data;
 }
 
+export async function purgeTrashedDocument(id: number): Promise<void> {
+  await apiClient.delete(`/trash/documents/${id}`);
+}
+
+export async function purgeTrashedFolder(id: number): Promise<void> {
+  await apiClient.delete(`/trash/folders/${id}`);
+}
+

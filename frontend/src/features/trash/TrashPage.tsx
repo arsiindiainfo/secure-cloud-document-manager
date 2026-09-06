@@ -7,7 +7,14 @@
 
 import { useState } from 'react';
 import { apiErrorMessage } from '../../lib/apiError';
-import { useTrash, useRestoreTrashedFolder, useRestoreTrashedDocument } from './hooks';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import {
+  useTrash,
+  useRestoreTrashedFolder,
+  useRestoreTrashedDocument,
+  usePurgeTrashedFolder,
+  usePurgeTrashedDocument,
+} from './hooks';
 import type { TrashedDocument, TrashedFolder } from '../../types/api';
 
 function daysRemainingLabel(daysRemaining: number): string {
@@ -15,14 +22,21 @@ function daysRemainingLabel(daysRemaining: number): string {
   return `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} until permanent removal`;
 }
 
-// §22.8 — soft-deleted folders/documents, each restorable individually.
+type PurgeTarget = { kind: 'folder'; item: TrashedFolder } | { kind: 'document'; item: TrashedDocument };
+
+// §22.8 — soft-deleted folders/documents, each restorable individually, or
+// permanently deletable (irreversible — S3 objects and DB rows both go).
 // Restoring a folder whose own parent is still deleted comes back as a 422
 // PARENT_FOLDER_NOT_FOUND — surfaced inline on that row rather than as a toast.
 export function TrashPage() {
   const { data, isLoading, isError } = useTrash();
   const restoreFolder = useRestoreTrashedFolder();
   const restoreDocument = useRestoreTrashedDocument();
+  const purgeFolder = usePurgeTrashedFolder();
+  const purgeDocument = usePurgeTrashedDocument();
   const [rowErrors, setRowErrors] = useState<Record<string, string>>({});
+  const [purgeTarget, setPurgeTarget] = useState<PurgeTarget | null>(null);
+  const [purgeError, setPurgeError] = useState<string | null>(null);
 
   const folders = data?.folders ?? [];
   const documents = data?.documents ?? [];
@@ -45,6 +59,21 @@ export function TrashPage() {
       await restoreDocument.mutateAsync(document.id);
     } catch (err) {
       setRowErrors((prev) => ({ ...prev, [rowKey]: apiErrorMessage(err, 'Could not restore document') }));
+    }
+  }
+
+  async function handleConfirmPurge() {
+    if (!purgeTarget) return;
+    setPurgeError(null);
+    try {
+      if (purgeTarget.kind === 'folder') {
+        await purgeFolder.mutateAsync(purgeTarget.item.id);
+      } else {
+        await purgeDocument.mutateAsync(purgeTarget.item.id);
+      }
+      setPurgeTarget(null);
+    } catch (err) {
+      setPurgeError(apiErrorMessage(err, 'Could not permanently delete this item'));
     }
   }
 
@@ -74,7 +103,7 @@ export function TrashPage() {
               {folders.map((folder) => {
                 const rowKey = `folder-${folder.id}`;
                 return (
-                  <li key={rowKey} className="flex items-center justify-between px-4 py-3">
+                  <li key={rowKey} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                     <div>
                       <p className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
                         <span aria-hidden>📁</span> {folder.name}
@@ -82,13 +111,24 @@ export function TrashPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">{daysRemainingLabel(folder.daysRemaining)}</p>
                       {rowErrors[rowKey] && <p className="mt-1 text-xs text-red-600">{rowErrors[rowKey]}</p>}
                     </div>
-                    <button
-                      onClick={() => void handleRestoreFolder(folder)}
-                      disabled={restoreFolder.isPending}
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
-                    >
-                      Restore
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => void handleRestoreFolder(folder)}
+                        disabled={restoreFolder.isPending}
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                      >
+                        Restore
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPurgeError(null);
+                          setPurgeTarget({ kind: 'folder', item: folder });
+                        }}
+                        className="rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
+                      >
+                        Delete permanently
+                      </button>
+                    </div>
                   </li>
                 );
               })}
@@ -103,7 +143,7 @@ export function TrashPage() {
               {documents.map((document) => {
                 const rowKey = `document-${document.id}`;
                 return (
-                  <li key={rowKey} className="flex items-center justify-between px-4 py-3">
+                  <li key={rowKey} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                     <div>
                       <p className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
                         <span aria-hidden>📄</span> {document.name}
@@ -111,13 +151,24 @@ export function TrashPage() {
                       <p className="text-xs text-slate-500 dark:text-slate-400">{daysRemainingLabel(document.daysRemaining)}</p>
                       {rowErrors[rowKey] && <p className="mt-1 text-xs text-red-600">{rowErrors[rowKey]}</p>}
                     </div>
-                    <button
-                      onClick={() => void handleRestoreDocument(document)}
-                      disabled={restoreDocument.isPending}
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
-                    >
-                      Restore
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => void handleRestoreDocument(document)}
+                        disabled={restoreDocument.isPending}
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                      >
+                        Restore
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPurgeError(null);
+                          setPurgeTarget({ kind: 'document', item: document });
+                        }}
+                        className="rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
+                      >
+                        Delete permanently
+                      </button>
+                    </div>
                   </li>
                 );
               })}
@@ -125,7 +176,21 @@ export function TrashPage() {
           </section>
         )}
       </div>
+
+      {purgeTarget && (
+        <ConfirmDialog
+          title={`Permanently delete "${purgeTarget.item.name}"?`}
+          message={
+            purgeError ??
+            (purgeTarget.kind === 'folder'
+              ? 'This deletes the folder and everything inside it forever — files, versions, and thumbnails. This cannot be undone.'
+              : 'This deletes the file and every version of it forever, including thumbnails. This cannot be undone.')
+          }
+          confirmLabel="Delete forever"
+          onConfirm={handleConfirmPurge}
+          onCancel={() => setPurgeTarget(null)}
+        />
+      )}
     </div>
   );
 }
-

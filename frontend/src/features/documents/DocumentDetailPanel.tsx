@@ -20,6 +20,8 @@ interface DocumentDetailPanelProps {
   documentId: number;
   folderId: number;
   onClose: () => void;
+  /** Opens straight into the Share dialog — the listing's own Share button uses this. */
+  autoOpenShare?: boolean;
 }
 
 /**
@@ -27,7 +29,7 @@ interface DocumentDetailPanelProps {
  * Preview/Sharing/Activity land once download/preview (Phase 2) and
  * sharing (Phase 3) exist.
  */
-export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentDetailPanelProps) {
+export function DocumentDetailPanel({ documentId, folderId, onClose, autoOpenShare = false }: DocumentDetailPanelProps) {
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -45,7 +47,7 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
-  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(autoOpenShare);
   const [isUploadingVersion, setIsUploadingVersion] = useState(false);
   const [versionError, setVersionError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

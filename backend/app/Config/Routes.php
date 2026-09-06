@@ -38,6 +38,7 @@ $routes->group('api/v1', function ($routes) {
             $routes->post('/', 'UsersController::invite');
             $routes->get('/', 'UsersController::index');
             $routes->put('(:num)', 'UsersController::update/$1');
+            $routes->delete('(:num)', 'UsersController::delete/$1');
         });
 
         // §16 — folders
@@ -79,6 +80,8 @@ $routes->group('api/v1', function ($routes) {
         // §22.2/§22.8 — dashboard summary, trash listing (both caller-scoped)
         $routes->get('dashboard', 'DashboardController::index');
         $routes->get('trash', 'TrashController::index');
+        $routes->delete('trash/documents/(:num)', 'TrashController::purgeDocument/$1');
+        $routes->delete('trash/folders/(:num)', 'TrashController::purgeFolder/$1');
     });
 
     // §9.3/§19 — internal, HMAC-signed (never a user JWT): deliberately

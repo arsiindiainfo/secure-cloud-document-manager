@@ -41,3 +41,7 @@ export async function updateUser(id: number, patch: UpdateUserPayload): Promise<
   return data.data;
 }
 
+export async function deleteUser(id: number): Promise<void> {
+  await apiClient.delete(`/users/${id}`);
+}
+

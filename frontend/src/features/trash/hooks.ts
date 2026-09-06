@@ -6,7 +6,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchTrash } from './api';
+import { fetchTrash, purgeTrashedDocument, purgeTrashedFolder } from './api';
 import { restoreFolder } from '../browser/api';
 import { restoreDocument } from '../documents/api';
 
@@ -31,6 +31,22 @@ export function useRestoreTrashedDocument() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => restoreDocument(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: trashKey }),
+  });
+}
+
+export function usePurgeTrashedFolder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => purgeTrashedFolder(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: trashKey }),
+  });
+}
+
+export function usePurgeTrashedDocument() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => purgeTrashedDocument(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: trashKey }),
   });
 }

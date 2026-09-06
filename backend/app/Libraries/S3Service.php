@@ -75,6 +75,24 @@ class S3Service
             ->getUri();
     }
 
+    /**
+     * Permanently removes objects from the bucket — only called from the
+     * Trash "delete forever" flow (§22.8), never on a plain soft delete.
+     * DeleteObjects caps at 1000 keys per call, chunked here so a large
+     * folder purge (many versions/thumbnails) can't exceed that.
+     *
+     * @param list<string> $keys
+     */
+    public function deleteObjects(array $keys): void
+    {
+        foreach (array_chunk($keys, 1000) as $chunk) {
+            $this->client->deleteObjects([
+                'Bucket' => $this->config->documentsBucket,
+                'Delete' => ['Objects' => array_map(static fn (string $key): array => ['Key' => $key], $chunk)],
+            ]);
+        }
+    }
+
     /** @return array{sizeBytes: int, etag: string}|null null if the object doesn't exist */
     public function headObject(string $key): ?array
     {
