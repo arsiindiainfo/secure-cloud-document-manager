@@ -74,7 +74,7 @@ export function AppShell() {
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:flex-row">
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800 md:hidden">
-        <BrandLogo className="h-6" />
+        <BrandLogo className="h-8" />
         <button
           type="button"
           onClick={() => setMobileNavOpen(true)}
@@ -100,7 +100,7 @@ export function AppShell() {
         }`}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 dark:border-slate-700">
-          <BrandLogo className="h-6" />
+          <BrandLogo className="h-8" />
           <button
             type="button"
             onClick={() => setMobileNavOpen(false)}

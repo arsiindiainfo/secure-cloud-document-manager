@@ -36,14 +36,8 @@ export function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
-
-  function fillDemoAccount(email: string) {
-    setValue('email', email, { shouldValidate: true });
-    setValue('password', 'Passw0rd!', { shouldValidate: true });
-  }
 
   async function onSubmit(values: LoginForm) {
     setServerError(null);
@@ -109,28 +103,6 @@ export function LoginPage() {
             {isSubmitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-
-        <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Demo accounts</p>
-          <div className="flex flex-col gap-1.5">
-            {[
-              { label: 'Ava Admin', role: 'ADMIN', email: 'admin@meridian.test' },
-              { label: 'Mark Manager', role: 'MANAGER', email: 'manager@meridian.test' },
-              { label: 'Eve Employee', role: 'EMPLOYEE', email: 'employee@meridian.test' },
-            ].map((account) => (
-              <button
-                key={account.email}
-                type="button"
-                onClick={() => fillDemoAccount(account.email)}
-                className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700/50"
-              >
-                <span>{account.label}</span>
-                <span className="text-xs text-slate-400">{account.role}</span>
-              </button>
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">Click a name to fill in its credentials, then Sign in.</p>
-        </div>
       </div>
       <BrandFooter />
     </div>

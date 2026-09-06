@@ -13,6 +13,7 @@ import { formatBytes } from '../../lib/fileTypes';
 import { folderChildrenKey } from '../browser/hooks';
 import { FilePreview } from '../../components/FilePreview';
 import { ShareDialog } from '../sharing/ShareDialog';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { uploadWithProgress, sha256Hex } from '../../lib/uploadWithProgress';
 
 interface DocumentDetailPanelProps {
@@ -47,6 +48,20 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isUploadingVersion, setIsUploadingVersion] = useState(false);
   const [versionError, setVersionError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    setDeleteError(null);
+    try {
+      await api.deleteDocument(documentId);
+      await queryClient.invalidateQueries({ queryKey: folderChildrenKey(folderId) });
+      onClose();
+    } catch (err) {
+      setDeleteError(apiErrorMessage(err, 'Could not delete document'));
+      setShowDeleteConfirm(false);
+    }
+  }
 
   async function handleDownload() {
     setDownloadError(null);
@@ -198,8 +213,17 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
                   />
                 </label>
               )}
+              {data.effectivePermission === 'OWNER' && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
+                >
+                  Delete
+                </button>
+              )}
             </div>
             {versionError && <p className="mt-2 text-sm text-red-600">{versionError}</p>}
+            {deleteError && <p className="mt-2 text-sm text-red-600">{deleteError}</p>}
           </div>
         )}
 
@@ -256,6 +280,16 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
 
       {showShareDialog && data && (
         <ShareDialog documentId={documentId} effectivePermission={data.effectivePermission} onClose={() => setShowShareDialog(false)} />
+      )}
+
+      {showDeleteConfirm && data && (
+        <ConfirmDialog
+          title={`Delete "${data.name}"?`}
+          message="Moves to Trash — can be restored within 30 days."
+          confirmLabel="Delete"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       )}
     </div>
   );

@@ -10,6 +10,7 @@
 namespace App\Services;
 
 use App\Entities\User;
+use App\Libraries\EmailTemplate;
 use App\Models\RefreshTokenModel;
 use App\Models\UserModel;
 use Config\Services;
@@ -74,14 +75,25 @@ class UsersService
 
     private function sendInviteEmail(string $email, string $name, string $temporaryPassword): void
     {
+        $safeName = esc($name, 'html');
+        $body     = "<p>Hi {$safeName},</p>"
+            . '<p>An account has been created for you on Secure Cloud Document Manager.</p>'
+            . '<table role="presentation" cellpadding="0" cellspacing="0" style="margin: 16px 0; font-size: 14px;">'
+            . '<tr><td style="padding: 4px 12px 4px 0; color: #64748b;">Email</td>'
+            . '<td style="padding: 4px 0; font-weight: 600; color: #0f172a;">' . esc($email, 'html') . '</td></tr>'
+            . '<tr><td style="padding: 4px 12px 4px 0; color: #64748b;">Temporary password</td>'
+            . '<td style="padding: 4px 0; font-weight: 600; color: #0f172a;">' . esc($temporaryPassword, 'html') . '</td></tr>'
+            . '</table>'
+            . '<p style="color: #94a3b8;">This is a demo account — change this password via a real reset flow in a production build.</p>';
+
         $emailService = Services::email();
         $emailService->setTo($email);
         $emailService->setSubject('Your Secure Cloud Document Manager account');
-        $emailService->setMessage(
-            "Hi {$name},\n\nAn account has been created for you.\n\n" .
-            "Email: {$email}\nTemporary password: {$temporaryPassword}\n\n" .
-            "Please log in and this is a demo — change it via a real reset flow in a production build."
-        );
+        $emailService->setMailType('html');
+        $emailService->setMessage(EmailTemplate::render('Welcome to Secure Cloud Document Manager', $body, [
+            'label' => 'Sign in',
+            'url'   => rtrim(config('App')->frontendUrl, '/') . '/login',
+        ]));
 
         // Delivery failure should not block the invite itself succeeding —
         // the ADMIN can still relay the temporary password out-of-band.
