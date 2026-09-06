@@ -109,6 +109,12 @@ class UsersService
             throw new ForbiddenActionException('This account cannot be deleted.');
         }
 
+        // users.email has a hard UNIQUE constraint that soft delete alone
+        // doesn't get around — without freeing it here, that address could
+        // never be invited again even though the user no longer appears
+        // anywhere. Embedding the id keeps this collision-proof even across
+        // repeated delete/invite cycles of the same original address.
+        $this->users->update($userId, ['email' => "deleted-{$userId}+{$user->email}"]);
         $this->users->delete($userId);
         $this->refreshTokens->revokeAllForUser($userId);
         $this->auditLog->record($requestedBy, 'USER_DELETED', 'USER', $userId, ['email' => $user->email]);
