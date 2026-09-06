@@ -25,10 +25,18 @@ class S3Service
     public function __construct(private readonly AwsConfig $config = new AwsConfig())
     {
         $args = [
-            'version'     => 'latest',
-            'region'      => $this->config->region,
-            'credentials' => ['key' => $this->config->key, 'secret' => $this->config->secret],
+            'version' => 'latest',
+            'region'  => $this->config->region,
         ];
+
+        // Only pass explicit credentials when actually configured (LocalStack
+        // dev). Passing an explicit-but-empty credentials array here
+        // overrides the AWS SDK's default provider chain, which is what
+        // production relies on to discover the EC2 instance's IAM role —
+        // omitting it entirely lets that fallback happen.
+        if ($this->config->key !== '' && $this->config->secret !== '') {
+            $args['credentials'] = ['key' => $this->config->key, 'secret' => $this->config->secret];
+        }
 
         // LocalStack needs an explicit endpoint + path-style addressing
         // (virtual-hosted-style bucket subdomains don't resolve locally).

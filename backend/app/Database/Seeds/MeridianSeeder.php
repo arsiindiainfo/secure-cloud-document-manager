@@ -98,10 +98,15 @@ class MeridianSeeder extends Seeder
     {
         $config = new AwsConfig();
         $args   = [
-            'version'     => 'latest',
-            'region'      => $config->region,
-            'credentials' => ['key' => $config->key, 'secret' => $config->secret],
+            'version' => 'latest',
+            'region'  => $config->region,
         ];
+        // See S3Service's constructor for why this is conditional — an
+        // explicit-but-empty credentials array would override the SDK's
+        // fallback to the EC2 instance's IAM role in production.
+        if ($config->key !== '' && $config->secret !== '') {
+            $args['credentials'] = ['key' => $config->key, 'secret' => $config->secret];
+        }
         if ($config->endpoint !== '') {
             $args['endpoint']               = $config->endpoint;
             $args['use_path_style_endpoint'] = true;
