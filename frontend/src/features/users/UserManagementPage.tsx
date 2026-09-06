@@ -227,7 +227,7 @@ export function UserManagementPage() {
       {deleteTarget && (
         <ConfirmDialog
           title={`Delete ${deleteTarget.name}?`}
-          message="They will be signed out immediately and can no longer sign in. Folders and documents they created are kept."
+          message="This permanently deletes the account — it cannot be undone. Fails if they've created folders or documents that still exist."
           confirmLabel="Delete"
           onConfirm={confirmDelete}
           onCancel={() => setDeleteTarget(null)}

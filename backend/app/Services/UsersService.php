@@ -12,11 +12,13 @@ namespace App\Services;
 use App\Entities\User;
 use App\Exceptions\ForbiddenActionException;
 use App\Exceptions\IncorrectPasswordException;
+use App\Exceptions\UserHasContentException;
 use App\Exceptions\UserNotFoundException;
 use App\Libraries\EmailTemplate;
 use App\Models\AuditLogModel;
 use App\Models\RefreshTokenModel;
 use App\Models\UserModel;
+use CodeIgniter\Database\Exceptions\DatabaseException;
 use Config\Services;
 
 /**
@@ -87,12 +89,12 @@ class UsersService
     }
 
     /**
-     * Soft delete (not hard) — sp_user_authenticate already excludes
-     * deleted_at rows, so this immediately blocks login and drops the user
-     * out of the admin's list, without risking an FK failure against every
-     * folder/document/version they've ever created (those keep an intact,
-     * historical creator reference — same reasoning as everywhere else in
-     * this app that soft-deletes instead of purging).
+     * A real, permanent delete — not a soft delete. folders.created_by,
+     * documents.created_by, document_versions.uploaded_by, and
+     * share_links.created_by are all ON DELETE RESTRICT, so this fails
+     * with UserHasContentException if the user actually created anything
+     * that still exists; there's no ownership to reassign, so that's
+     * surfaced rather than silently downgraded to a soft delete.
      */
     public function delete(int $userId, int $requestedBy): void
     {
@@ -109,14 +111,15 @@ class UsersService
             throw new ForbiddenActionException('This account cannot be deleted.');
         }
 
-        // users.email has a hard UNIQUE constraint that soft delete alone
-        // doesn't get around — without freeing it here, that address could
-        // never be invited again even though the user no longer appears
-        // anywhere. Embedding the id keeps this collision-proof even across
-        // repeated delete/invite cycles of the same original address.
-        $this->users->update($userId, ['email' => "deleted-{$userId}+{$user->email}"]);
-        $this->users->delete($userId);
-        $this->refreshTokens->revokeAllForUser($userId);
+        try {
+            // refresh_tokens.user_id is ON DELETE CASCADE — every session
+            // is gone the instant this succeeds, no separate revoke needed.
+            $this->users->delete($userId, true);
+        } catch (DatabaseException $e) {
+            throw new UserHasContentException();
+        }
+
+        // entity_id, not a real FK — this row outlives the user it names.
         $this->auditLog->record($requestedBy, 'USER_DELETED', 'USER', $userId, ['email' => $user->email]);
     }
 
