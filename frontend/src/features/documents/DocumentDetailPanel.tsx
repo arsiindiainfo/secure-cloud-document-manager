@@ -279,7 +279,11 @@ export function DocumentDetailPanel({ documentId, folderId, onClose }: DocumentD
       </div>
 
       {showShareDialog && data && (
-        <ShareDialog documentId={documentId} effectivePermission={data.effectivePermission} onClose={() => setShowShareDialog(false)} />
+        <ShareDialog
+          target={{ type: 'document', id: documentId }}
+          effectivePermission={data.effectivePermission}
+          onClose={() => setShowShareDialog(false)}
+        />
       )}
 
       {showDeleteConfirm && data && (

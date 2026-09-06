@@ -5,7 +5,7 @@
  * name and logo are separately protected -- see TRADEMARK.md.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Permission } from '../../types/api';
 import { apiErrorMessage } from '../../lib/apiError';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -16,11 +16,12 @@ import {
   useShareLinks,
   useCreateShareLink,
   useRevokeShareLink,
+  useUserSearch,
 } from './hooks';
-import type { SharePermission } from './api';
+import type { ShareTarget, SharePermission } from './api';
 
 interface ShareDialogProps {
-  documentId: number;
+  target: ShareTarget;
   effectivePermission: Permission;
   onClose: () => void;
 }
@@ -30,21 +31,24 @@ const EXPIRY_OPTIONS = [
   { label: '7 days', hours: 168 },
 ];
 
-/** §22.5 — internal grants (OWNER only) + external expiring links (OWNER/EDITOR). */
-export function ShareDialog({ documentId, effectivePermission, onClose }: ShareDialogProps) {
+/** §22.5 — internal grants (OWNER only) + external expiring links (documents only, OWNER/EDITOR). */
+export function ShareDialog({ target, effectivePermission, onClose }: ShareDialogProps) {
   const canManageGrants = effectivePermission === 'OWNER';
-  const canManageLinks = effectivePermission === 'OWNER' || effectivePermission === 'EDITOR';
+  const canManageLinks = target.type === 'document' && (effectivePermission === 'OWNER' || effectivePermission === 'EDITOR');
 
-  const grants = useGrants(documentId);
-  const grantAccess = useGrantAccess(documentId);
-  const revokeAccess = useRevokeAccess(documentId);
-  const shareLinks = useShareLinks(documentId);
-  const createLink = useCreateShareLink(documentId);
-  const revokeLink = useRevokeShareLink(documentId);
+  const grants = useGrants(target);
+  const grantAccess = useGrantAccess(target);
+  const revokeAccess = useRevokeAccess(target);
+  const shareLinks = useShareLinks(target.type === 'document' ? target.id : 0);
+  const createLink = useCreateShareLink(target.type === 'document' ? target.id : 0);
+  const revokeLink = useRevokeShareLink(target.type === 'document' ? target.id : 0);
 
   const [email, setEmail] = useState('');
   const [permission, setPermission] = useState<Permission>('VIEWER');
   const [grantError, setGrantError] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const userSearch = useUserSearch(email);
 
   const [linkPermission, setLinkPermission] = useState<SharePermission>('DOWNLOAD');
   const [expiresInHours, setExpiresInHours] = useState(24);
@@ -55,6 +59,14 @@ export function ShareDialog({ documentId, effectivePermission, onClose }: ShareD
 
   const [revokeUserTarget, setRevokeUserTarget] = useState<number | null>(null);
   const [revokeLinkTarget, setRevokeLinkTarget] = useState<number | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) setShowSuggestions(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   async function handleGrant(e: React.FormEvent) {
     e.preventDefault();
@@ -100,7 +112,7 @@ export function ShareDialog({ documentId, effectivePermission, onClose }: ShareD
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg dark:bg-slate-800">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Share</h2>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Share {target.type === 'folder' ? 'folder' : ''}</h2>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300" aria-label="Close">
             ✕
           </button>
@@ -110,14 +122,40 @@ export function ShareDialog({ documentId, effectivePermission, onClose }: ShareD
           <section className="mb-6">
             <h3 className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">Invite a person</h3>
             <form onSubmit={(e) => void handleGrant(e)} className="flex gap-2">
-              <input
-                type="email"
-                required
-                placeholder="name@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-              />
+              <div ref={suggestionsRef} className="relative flex-1">
+                <input
+                  type="email"
+                  required
+                  autoComplete="off"
+                  placeholder="name@company.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                />
+                {showSuggestions && (userSearch.data?.length ?? 0) > 0 && (
+                  <ul className="absolute z-10 mt-1 w-full rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                    {userSearch.data!.map((u) => (
+                      <li key={u.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEmail(u.email);
+                            setShowSuggestions(false);
+                          }}
+                          className="flex w-full flex-col px-3 py-1.5 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                        >
+                          <span className="text-sm text-slate-800 dark:text-slate-200">{u.name}</span>
+                          <span className="text-xs text-slate-400">{u.email}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <select
                 value={permission}
                 onChange={(e) => setPermission(e.target.value as Permission)}
@@ -252,4 +290,3 @@ export function ShareDialog({ documentId, effectivePermission, onClose }: ShareD
     </div>
   );
 }
-

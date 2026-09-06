@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, Clock, Cloud, FileText, FolderOpen, FolderPlus, Pencil, Trash2, Upload, Users2, Zap } from 'lucide-react';
+import { CheckCircle2, Clock, Cloud, FileText, FolderOpen, FolderPlus, Pencil, Share2, Trash2, Upload, Users2, Zap } from 'lucide-react';
 import { Breadcrumbs } from '../../components/Breadcrumbs';
 import { StatCard } from '../../components/StatCard';
 import { UploadDropzone } from '../../components/UploadDropzone';
@@ -25,6 +25,7 @@ import { RenameFolderDialog } from './RenameFolderDialog';
 import { UploadDialog } from '../documents/UploadDialog';
 import { DocumentDetailPanel } from '../documents/DocumentDetailPanel';
 import { ShareDialogLoader } from '../sharing/ShareDialogLoader';
+import type { ShareTarget } from '../sharing/api';
 import type { Document, Folder, RecentDocumentActivity } from '../../types/api';
 
 function activityLabel(action: RecentDocumentActivity['action']): string {
@@ -63,7 +64,7 @@ export function FolderBrowserPage() {
   const [deleteTarget, setDeleteTarget] = useState<Folder | null>(null);
   const [renameTarget, setRenameTarget] = useState<Folder | null>(null);
   const [openDocumentId, setOpenDocumentId] = useState<number | null>(null);
-  const [shareDocumentId, setShareDocumentId] = useState<number | null>(null);
+  const [shareTarget, setShareTarget] = useState<ShareTarget | null>(null);
   const [deleteDocumentTarget, setDeleteDocumentTarget] = useState<Document | null>(null);
   const [documentRowError, setDocumentRowError] = useState<{ id: number; message: string } | null>(null);
 
@@ -181,6 +182,16 @@ export function FolderBrowserPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      setShareTarget({ type: 'folder', id: folder.id });
+                    }}
+                    aria-label="Share folder"
+                    className="rounded-full bg-white p-1.5 text-slate-500 shadow hover:text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                  >
+                    <Share2 size={13} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setRenameTarget(folder);
                     }}
                     aria-label="Rename folder"
@@ -225,6 +236,15 @@ export function FolderBrowserPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      setShareTarget({ type: 'folder', id: folder.id });
+                    }}
+                    className="text-xs text-slate-500 hover:underline dark:text-slate-400"
+                  >
+                    Share
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setRenameTarget(folder);
                     }}
                     className="text-xs text-slate-500 hover:underline dark:text-slate-400"
@@ -261,7 +281,7 @@ export function FolderBrowserPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShareDocumentId(doc.id);
+                      setShareTarget({ type: 'document', id: doc.id });
                     }}
                     className="text-xs text-slate-500 hover:underline dark:text-slate-400"
                   >
@@ -482,8 +502,8 @@ export function FolderBrowserPage() {
         <DocumentDetailPanel documentId={openDocumentId} folderId={folderId} onClose={() => setOpenDocumentId(null)} />
       )}
 
-      {shareDocumentId !== null && (
-        <ShareDialogLoader documentId={shareDocumentId} onClose={() => setShareDocumentId(null)} />
+      {shareTarget !== null && (
+        <ShareDialogLoader target={shareTarget} onClose={() => setShareTarget(null)} />
       )}
     </div>
   );

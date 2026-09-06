@@ -7,26 +7,33 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchDocument } from '../documents/api';
+import { fetchFolder } from '../browser/api';
 import { ShareDialog } from './ShareDialog';
+import type { ShareTarget } from './api';
+import type { DocumentDetail, FolderDetail } from '../../types/api';
 
 interface ShareDialogLoaderProps {
-  documentId: number;
+  target: ShareTarget;
   onClose: () => void;
 }
 
+function fetchTarget(target: ShareTarget): Promise<DocumentDetail | FolderDetail> {
+  return target.type === 'document' ? fetchDocument(target.id) : fetchFolder(target.id);
+}
+
 /**
- * A listing row's "Share" button needs the document's effectivePermission
+ * A listing row's "Share" button needs the target's effectivePermission
  * (ShareDialog gates its sections on it) but nothing else — this fetches
  * just that and renders only the dialog, instead of also mounting the full
- * DocumentDetailPanel slide-over behind it.
+ * detail slide-over behind it.
  */
-export function ShareDialogLoader({ documentId, onClose }: ShareDialogLoaderProps) {
+export function ShareDialogLoader({ target, onClose }: ShareDialogLoaderProps) {
   const { data } = useQuery({
-    queryKey: ['document', documentId],
-    queryFn: () => fetchDocument(documentId),
+    queryKey: target.type === 'document' ? ['document', target.id] : ['folder', target.id],
+    queryFn: () => fetchTarget(target),
   });
 
   if (!data) return null;
 
-  return <ShareDialog documentId={documentId} effectivePermission={data.effectivePermission} onClose={onClose} />;
+  return <ShareDialog target={target} effectivePermission={data.effectivePermission} onClose={onClose} />;
 }
