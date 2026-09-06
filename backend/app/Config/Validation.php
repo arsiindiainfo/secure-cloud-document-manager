@@ -68,6 +68,19 @@ class Validation extends BaseConfig
     ];
 
     /** @var array<string, string> */
+    public array $authRegister = [
+        'name'           => 'required|min_length[2]|max_length[120]',
+        'email'          => 'required|valid_email|is_unique[users.email]',
+        'password'       => 'required|min_length[8]',
+        'recaptchaToken' => 'permit_empty|string',
+    ];
+
+    /** @var array<string, string> */
+    public array $authVerifyEmail = [
+        'token' => 'required|string|exact_length[43]',
+    ];
+
+    /** @var array<string, string> */
     public array $usersInvite = [
         'name'  => 'required|min_length[2]|max_length[120]',
         'email' => 'required|valid_email|is_unique[users.email]',

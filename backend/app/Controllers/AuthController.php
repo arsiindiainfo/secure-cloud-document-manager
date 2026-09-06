@@ -10,6 +10,7 @@
 namespace App\Controllers;
 
 use App\Services\AuthService;
+use App\Services\RegistrationService;
 use CodeIgniter\HTTP\ResponseInterface;
 use OpenApi\Attributes as OA;
 
@@ -108,6 +109,66 @@ class AuthController extends BaseController
         (new AuthService())->logout($data['refreshToken']);
 
         return $this->ok(['loggedOut' => true]);
+    }
+
+    #[OA\Post(
+        path: '/auth/register',
+        tags: ['Auth'],
+        summary: 'Self-register (role MANAGER) — requires clicking the emailed verification link before login',
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['name', 'email', 'password'],
+            properties: [
+                new OA\Property(property: 'name', type: 'string', minLength: 2, maxLength: 120),
+                new OA\Property(property: 'email', type: 'string', format: 'email'),
+                new OA\Property(property: 'password', type: 'string', minLength: 8),
+                new OA\Property(property: 'recaptchaToken', type: 'string', description: 'Google reCAPTCHA v2 response token'),
+            ],
+        )),
+        responses: [
+            new OA\Response(response: 201, description: 'Registered — check email to verify', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'data', properties: [new OA\Property(property: 'userId', type: 'integer')], type: 'object'),
+            ])),
+            new OA\Response(response: 400, ref: '#/components/responses/ValidationError', description: '400 VALIDATION_ERROR, or RECAPTCHA_FAILED'),
+            new OA\Response(response: 409, ref: '#/components/responses/Conflict', description: '409 DUPLICATE_NAME — email already registered'),
+            new OA\Response(response: 429, ref: '#/components/responses/RateLimited'),
+        ],
+    )]
+    public function register(): ResponseInterface
+    {
+        $data = $this->validated('authRegister');
+
+        $userId = (new RegistrationService())->register(
+            $data['name'],
+            $data['email'],
+            $data['password'],
+            $data['recaptchaToken'] ?? null,
+            $this->request->getIPAddress(),
+        );
+
+        return $this->created(['userId' => $userId]);
+    }
+
+    #[OA\Post(
+        path: '/auth/verify-email',
+        tags: ['Auth'],
+        summary: 'Confirm a self-registered email address via its verification token',
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['token'],
+            properties: [new OA\Property(property: 'token', type: 'string')],
+        )),
+        responses: [
+            new OA\Response(response: 200, description: 'Verified — the account can now log in'),
+            new OA\Response(response: 400, description: '400 VALIDATION_ERROR or INVALID_VERIFICATION_TOKEN', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+        ],
+    )]
+    public function verifyEmail(): ResponseInterface
+    {
+        $data = $this->validated('authVerifyEmail');
+
+        (new RegistrationService())->verifyEmail($data['token']);
+
+        return $this->ok(['verified' => true]);
     }
 }
 

@@ -25,6 +25,8 @@ $routes->group('api/v1', function ($routes) {
     // §15 — 10/min/IP, cache-backed (§5).
     $routes->post('auth/login', 'AuthController::login', ['filter' => 'rateLimit:10,60']);
     $routes->post('auth/refresh', 'AuthController::refresh');
+    $routes->post('auth/register', 'AuthController::register', ['filter' => 'rateLimit:10,60']);
+    $routes->post('auth/verify-email', 'AuthController::verifyEmail', ['filter' => 'rateLimit:10,60']);
 
     // §31.2 — public project/author metadata.
     $routes->get('about', 'AboutController::index');

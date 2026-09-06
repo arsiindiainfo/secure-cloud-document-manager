@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
 import { apiErrorMessage } from '../../lib/apiError';
 import { BrandLogo } from '../../components/BrandLogo';
@@ -103,6 +103,13 @@ export function LoginPage() {
             {isSubmitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
+          Don't have an account?{' '}
+          <Link to="/register" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+            Create one
+          </Link>
+        </p>
       </div>
       <BrandFooter />
     </div>

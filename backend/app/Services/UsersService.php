@@ -9,6 +9,7 @@
 
 namespace App\Services;
 
+use App\Constants\SuperAdmin;
 use App\Entities\User;
 use App\Exceptions\ForbiddenActionException;
 use App\Exceptions\IncorrectPasswordException;
@@ -22,15 +23,12 @@ use CodeIgniter\Database\Exceptions\DatabaseException;
 use Config\Services;
 
 /**
- * §15's user-management endpoints. No public self-registration — accounts
- * only come from an ADMIN invite, with a server-generated temporary
- * password the client never sees or chooses.
+ * §15's ADMIN-facing user-management endpoints (invite/list/update/delete/
+ * change-own-password). Self-registration is a separate public flow — see
+ * RegistrationService.
  */
 class UsersService
 {
-    /** The one account no ADMIN — including itself — can delete. */
-    private const SUPER_ADMIN_EMAIL = 'arsi.india.info@gmail.com';
-
     public function __construct(
         private readonly UserModel $users = new UserModel(),
         private readonly RefreshTokenModel $refreshTokens = new RefreshTokenModel(),
@@ -71,7 +69,7 @@ class UsersService
     public function updateRoleStatus(int $userId, ?string $role, ?string $status): User
     {
         $user = $this->users->find($userId);
-        if ($user !== null && strcasecmp($user->email, self::SUPER_ADMIN_EMAIL) === 0) {
+        if ($user !== null && strcasecmp($user->email, SuperAdmin::EMAIL) === 0) {
             throw new ForbiddenActionException('This account\'s role and status cannot be changed.');
         }
 
@@ -107,7 +105,7 @@ class UsersService
             throw new UserNotFoundException('No user was found with this id.');
         }
 
-        if (strcasecmp($user->email, self::SUPER_ADMIN_EMAIL) === 0) {
+        if (strcasecmp($user->email, SuperAdmin::EMAIL) === 0) {
             throw new ForbiddenActionException('This account cannot be deleted.');
         }
 

@@ -4,6 +4,7 @@ CREATE PROCEDURE sp_user_authenticate(
   OUT p_password_hash VARCHAR(255),
   OUT p_role VARCHAR(20),
   OUT p_status VARCHAR(20),
+  OUT p_email_verified TINYINT(1),
   OUT p_status_code VARCHAR(30),
   OUT p_message VARCHAR(255)
 )
@@ -16,8 +17,8 @@ sp_user_authenticate: BEGIN
     SET p_status_code = 'NOT_FOUND', p_message = 'No such account.';
     LEAVE sp_user_authenticate;
   END IF;
-  SELECT id, password_hash, role, status
-    INTO p_user_id, p_password_hash, p_role, p_status
+  SELECT id, password_hash, role, status, email_verified_at IS NOT NULL
+    INTO p_user_id, p_password_hash, p_role, p_status, p_email_verified
     FROM users WHERE email = p_email AND deleted_at IS NULL;
   SET p_status_code = 'OK', p_message = 'Account found.';
 END

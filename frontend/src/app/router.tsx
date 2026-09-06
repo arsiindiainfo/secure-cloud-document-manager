@@ -7,6 +7,8 @@
 
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { LoginPage } from '../features/auth/LoginPage';
+import { RegisterPage } from '../features/auth/RegisterPage';
+import { VerifyEmailPage } from '../features/auth/VerifyEmailPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { FolderBrowserPage } from '../features/browser/FolderBrowserPage';
 import { SearchResultsPage } from '../features/search/SearchResultsPage';
@@ -19,6 +21,8 @@ import { RequireRole } from './RequireRole';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
+  { path: '/verify-email/:token', element: <VerifyEmailPage /> },
   // §22.11 — no auth, no app shell: outside ProtectedRoute entirely.
   { path: '/s/:token', element: <PublicSharePage /> },
   {

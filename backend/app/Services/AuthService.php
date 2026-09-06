@@ -9,6 +9,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\EmailNotVerifiedException;
 use App\Exceptions\RecaptchaFailedException;
 use App\Exceptions\UnauthorizedException;
 use App\Libraries\JwtService;
@@ -57,6 +58,14 @@ class AuthService
             );
 
             throw new UnauthorizedException('Invalid email or password.');
+        }
+
+        // Only reached once the password is already confirmed correct, so
+        // this doesn't leak account existence to a stranger (§6.3) — it's
+        // just telling someone who already proved they own the password
+        // what's blocking their own login.
+        if (! $credentials['emailVerified']) {
+            throw new EmailNotVerifiedException();
         }
 
         $accessToken  = $this->jwt->issueAccessToken($credentials['userId'], $credentials['role']);
