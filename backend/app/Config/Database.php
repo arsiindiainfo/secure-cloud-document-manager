@@ -201,30 +201,6 @@ class Database extends Config
     {
         parent::__construct();
 
-        // BaseConfig's automatic env-override (the `database.default.*`
-        // keys in .env) doesn't apply here on demo2's production server —
-        // confirmed via debug logging that hostname/database stayed at
-        // this class's hardcoded array defaults on every real request,
-        // even though the exact same env vars were visible to a plain
-        // getenv() call and to other Config classes that read env()
-        // explicitly in their own constructor (e.g. Config\Recaptcha).
-        // Reading them explicitly here sidesteps whatever that mismatch
-        // is, the same way Recaptcha already does.
-        log_message('error', 'DB config env() probe — raw call result: ['
-            . var_export(env('database.default.hostname', '__FALLBACK_MARKER__'), true) . ']');
-        $dbKeysInServer = array_values(array_filter(array_keys($_SERVER), static fn ($k) => str_contains($k, 'database')));
-        $dbKeysInEnv    = array_values(array_filter(array_keys($_ENV), static fn ($k) => str_contains($k, 'database')));
-        log_message('error', 'DB config env() probe — $_SERVER database.* keys: ' . json_encode($dbKeysInServer)
-            . ' | $_ENV database.* keys: ' . json_encode($dbKeysInEnv)
-            . ' | getenv(direct): [' . var_export(getenv('database.default.hostname'), true) . ']'
-            . ' | recaptcha.secretKey via env(): [' . var_export(env('recaptcha.secretKey', '__MISSING__'), true) . ']');
-
-        $this->default['hostname'] = env('database.default.hostname', $this->default['hostname']);
-        $this->default['port']     = (int) env('database.default.port', $this->default['port']);
-        $this->default['username'] = env('database.default.username', $this->default['username']);
-        $this->default['password'] = env('database.default.password', $this->default['password']);
-        $this->default['database'] = env('database.default.database', $this->default['database']);
-
         // Ensure that we always set the database group to 'tests' if
         // we are currently running an automated test suite, so that
         // we don't overwrite live data on accident.

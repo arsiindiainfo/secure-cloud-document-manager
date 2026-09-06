@@ -16,6 +16,16 @@ services:
     network_mode: "host"
     env_file:
       - ../backend/.env
+    # env_file only injects these as OS-level process env vars, which
+    # turned out not to be visible to CodeIgniter during real request
+    # handling under `spark serve` (confirmed via debug logging: getenv()
+    # returned correct values via `docker exec`, but env()/$_SERVER/$_ENV
+    # were all empty inside an actual HTTP request). CI4 also loads a
+    # physical .env file itself (system/Boot.php's loadDotEnv(), into
+    # $_SERVER/$_ENV) — mounting the real file at its expected path lets
+    # that path do the job instead.
+    volumes:
+      - ../backend/.env:/var/www/backend/.env:ro
 
   web:
     build:
