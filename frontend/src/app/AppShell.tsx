@@ -5,25 +5,13 @@
  * name and logo are separately protected -- see TRADEMARK.md.
  */
 
-import {
-  FolderOpen,
-  Home,
-  KeyRound,
-  LogOut,
-  Menu,
-  ScrollText,
-  Search,
-  Trash2,
-  Users,
-  X,
-  type LucideIcon,
-} from 'lucide-react';
+import { FolderOpen, Home, Menu, ScrollText, Trash2, Users, X, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { BrandFooter } from '../components/BrandFooter';
 import { BrandLogo } from '../components/BrandLogo';
+import { TopBar } from '../components/TopBar';
 import { useAuth } from '../features/auth/useAuth';
-import { ChangePasswordDialog } from '../features/users/ChangePasswordDialog';
 
 const NAV_ITEMS: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/browse', label: 'Browse', icon: FolderOpen },
@@ -36,46 +24,19 @@ const ADMIN_NAV_ITEMS: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/admin/audit-log', label: 'Audit log', icon: ScrollText },
 ];
 
-const AVATAR_COLORS = ['bg-indigo-600', 'bg-purple-600', 'bg-pink-600', 'bg-emerald-600', 'bg-amber-600', 'bg-sky-600'];
-
-function initialsOf(name: string | undefined): string {
-  if (!name) return '?';
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? '';
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
-  return (first + last).toUpperCase();
-}
-
-function avatarColorFor(seed: string | undefined): string {
-  if (!seed) return AVATAR_COLORS[0];
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
-
 /**
- * §31.2 — one persistent shell (sidebar nav + mobile drawer + BrandFooter)
- * wrapping every authenticated screen, rather than each page duplicating
- * its own header. Replaces the per-page <header> that used to overflow on
- * narrow screens (a row of 5+ buttons with no wrap/collapse).
+ * §31.2 — sidebar nav + mobile drawer + a persistent TopBar (search,
+ * notifications, account menu) wrapping every authenticated screen,
+ * rather than each page duplicating its own header.
  */
 export function AppShell() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showChangePassword, setShowChangePassword] = useState(false);
   const navItems = user?.role === 'ADMIN' ? [...NAV_ITEMS, ...ADMIN_NAV_ITEMS] : NAV_ITEMS;
-
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (q !== '') navigate(`/search?q=${encodeURIComponent(q)}`);
-  }
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:flex-row">
-      {/* Mobile top bar */}
+      {/* Mobile top bar (logo + hamburger) */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800 md:hidden">
         <BrandLogo className="h-10" />
         <button
@@ -114,18 +75,6 @@ export function AppShell() {
           </button>
         </div>
 
-        <form onSubmit={handleSearchSubmit} className="border-b border-slate-200 p-3 dark:border-slate-700">
-          <div className="relative">
-            <Search size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search documents…"
-              className="w-full rounded-md border border-slate-300 py-1.5 pl-8 pr-2.5 text-xs dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            />
-          </div>
-        </form>
-
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -148,49 +97,15 @@ export function AppShell() {
             );
           })}
         </nav>
-
-        <div className="flex items-center gap-3 border-t border-slate-200 p-3 dark:border-slate-700">
-          <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white ${avatarColorFor(user?.email)}`}
-          >
-            {initialsOf(user?.name)}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-medium text-slate-700 dark:text-slate-200">{user?.name}</div>
-            <div className="truncate text-xs text-slate-400 dark:text-slate-500">{user?.email}</div>
-            <div className="mt-1 flex items-center gap-3">
-              <button
-                onClick={() => setShowChangePassword(true)}
-                className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-              >
-                <KeyRound size={12} />
-                Password
-              </button>
-              <button
-                onClick={() => void logout()}
-                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-              >
-                <LogOut size={12} />
-                Sign out
-              </button>
-            </div>
-          </div>
-        </div>
       </aside>
 
       <div className="flex flex-1 flex-col overflow-x-hidden">
+        <TopBar />
         <main className="flex-1 p-4 md:p-6">
           <Outlet />
         </main>
         <BrandFooter />
       </div>
-
-      {showChangePassword && (
-        <ChangePasswordDialog
-          onClose={() => setShowChangePassword(false)}
-          onChanged={() => void logout()}
-        />
-      )}
     </div>
   );
 }

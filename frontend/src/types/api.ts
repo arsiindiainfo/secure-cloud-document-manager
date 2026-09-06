@@ -56,6 +56,7 @@ export interface Folder {
   id: number;
   parentFolderId: number | null;
   name: string;
+  itemCount: number;
   createdBy: number;
   createdAt: string;
   updatedAt: string;

@@ -131,27 +131,67 @@ class FolderModel extends Model
         return array_map(static fn (array $row): array => ['id' => (int) $row['id'], 'name' => (string) $row['name']], $rows);
     }
 
-    /** @return list<Folder> */
+    /**
+     * §22.3 — listing needs an item count per folder card, which the plain
+     * Folder entity doesn't carry — bypasses entity hydration to shape the
+     * row directly, same reasoning as DocumentModel::childDocuments().
+     * `<=>` is MySQL's null-safe equals: parent_folder_id is NULL at root,
+     * and a plain `=` never matches NULL.
+     *
+     * @return list<array<string, mixed>>
+     */
     public function childFolders(?int $parentFolderId): array
     {
-        return $this->where('parent_folder_id', $parentFolderId)->orderBy('name', 'asc')->findAll();
+        $rows = $this->db->query(<<<'SQL'
+            SELECT f.*,
+              (SELECT COUNT(*) FROM folders sf WHERE sf.parent_folder_id = f.id AND sf.deleted_at IS NULL) AS subfolder_count,
+              (SELECT COUNT(*) FROM documents d WHERE d.folder_id = f.id AND d.deleted_at IS NULL) AS document_count
+            FROM folders f
+            WHERE f.parent_folder_id <=> ? AND f.deleted_at IS NULL
+            ORDER BY f.name ASC
+        SQL, [$parentFolderId])->getResultArray();
+
+        return array_map(static fn (array $row): array => [
+            'id'             => (int) $row['id'],
+            'parentFolderId' => $row['parent_folder_id'] !== null ? (int) $row['parent_folder_id'] : null,
+            'name'           => $row['name'],
+            'createdBy'      => (int) $row['created_by'],
+            'createdAt'      => $row['created_at'],
+            'updatedAt'      => $row['updated_at'],
+            'deletedAt'      => $row['deleted_at'],
+            'itemCount'      => (int) $row['subfolder_count'] + (int) $row['document_count'],
+        ], $rows);
     }
 
     /**
      * Root folders a non-admin user has a direct grant on — see §16: no
-     * ancestor to inherit from at the top of the tree.
+     * ancestor to inherit from at the top of the tree. Same shaped-row
+     * form as childFolders() (item count included), not the plain entity.
      *
-     * @return list<Folder>
+     * @return list<array<string, mixed>>
      */
     public function accessibleRootFolders(int $userId): array
     {
-        return $this->select('folders.*')
-            ->join('document_permissions', 'document_permissions.folder_id = folders.id')
-            ->where('folders.parent_folder_id', null)
-            ->where('folders.deleted_at', null)
-            ->where('document_permissions.user_id', $userId)
-            ->orderBy('folders.name', 'asc')
-            ->findAll();
+        $rows = $this->db->query(<<<'SQL'
+            SELECT f.*,
+              (SELECT COUNT(*) FROM folders sf WHERE sf.parent_folder_id = f.id AND sf.deleted_at IS NULL) AS subfolder_count,
+              (SELECT COUNT(*) FROM documents d WHERE d.folder_id = f.id AND d.deleted_at IS NULL) AS document_count
+            FROM folders f
+            JOIN document_permissions dp ON dp.folder_id = f.id
+            WHERE f.parent_folder_id IS NULL AND f.deleted_at IS NULL AND dp.user_id = ?
+            ORDER BY f.name ASC
+        SQL, [$userId])->getResultArray();
+
+        return array_map(static fn (array $row): array => [
+            'id'             => (int) $row['id'],
+            'parentFolderId' => $row['parent_folder_id'] !== null ? (int) $row['parent_folder_id'] : null,
+            'name'           => $row['name'],
+            'createdBy'      => (int) $row['created_by'],
+            'createdAt'      => $row['created_at'],
+            'updatedAt'      => $row['updated_at'],
+            'deletedAt'      => $row['deleted_at'],
+            'itemCount'      => (int) $row['subfolder_count'] + (int) $row['document_count'],
+        ], $rows);
     }
 
     /**
