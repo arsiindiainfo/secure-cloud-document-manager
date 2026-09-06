@@ -212,6 +212,12 @@ class Database extends Config
         // is, the same way Recaptcha already does.
         log_message('error', 'DB config env() probe — raw call result: ['
             . var_export(env('database.default.hostname', '__FALLBACK_MARKER__'), true) . ']');
+        $dbKeysInServer = array_values(array_filter(array_keys($_SERVER), static fn ($k) => str_contains($k, 'database')));
+        $dbKeysInEnv    = array_values(array_filter(array_keys($_ENV), static fn ($k) => str_contains($k, 'database')));
+        log_message('error', 'DB config env() probe — $_SERVER database.* keys: ' . json_encode($dbKeysInServer)
+            . ' | $_ENV database.* keys: ' . json_encode($dbKeysInEnv)
+            . ' | getenv(direct): [' . var_export(getenv('database.default.hostname'), true) . ']'
+            . ' | recaptcha.secretKey via env(): [' . var_export(env('recaptcha.secretKey', '__MISSING__'), true) . ']');
 
         $this->default['hostname'] = env('database.default.hostname', $this->default['hostname']);
         $this->default['port']     = (int) env('database.default.port', $this->default['port']);
