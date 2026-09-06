@@ -70,11 +70,12 @@ class FolderService
     {
         $auth = Services::authContext();
 
-        if ($parentFolderId === null) {
-            if (! $auth->isAdmin()) {
-                throw new ForbiddenActionException('Only administrators can create root folders.');
-            }
-        } else {
+        // Root folders: any authenticated user, admin-invited or
+        // self-registered — sp_folder_create auto-grants the creator OWNER,
+        // so this is also what gives a brand-new self-registered account
+        // (with no admin-provisioned access to anything) somewhere to
+        // start. Non-root still requires an EDITOR+ grant on the parent.
+        if ($parentFolderId !== null) {
             $this->authorize($parentFolderId, 'EDITOR');
         }
 

@@ -12,7 +12,6 @@ import { UploadDropzone } from '../../components/UploadDropzone';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { DocumentThumbnail } from '../../components/DocumentThumbnail';
 import { apiErrorMessage } from '../../lib/apiError';
-import { useAuth } from '../auth/useAuth';
 import { useFolderChildren, useCreateFolder, useDeleteFolder, useRenameFolder, useDeleteDocumentInFolder } from './hooks';
 import { CreateFolderDialog } from './CreateFolderDialog';
 import { RenameFolderDialog } from './RenameFolderDialog';
@@ -29,7 +28,6 @@ export function FolderBrowserPage() {
   const { folderId: folderIdParam } = useParams<{ folderId?: string }>();
   const folderId = folderIdParam ? Number(folderIdParam) : null;
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const { data, isLoading, isError } = useFolderChildren(folderId);
   const createFolder = useCreateFolder(folderId);
@@ -83,15 +81,15 @@ export function FolderBrowserPage() {
             {data?.breadcrumb.at(-1)?.name ?? 'Home'}
           </h1>
           <div className="flex gap-2">
-            {/* Only ADMINs may create root folders (§16) — hidden, not disabled, per §23. */}
-            {(folderId !== null || user?.role === 'ADMIN') && (
-              <button
-                onClick={() => setShowCreateFolder(true)}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
-              >
-                New folder
-              </button>
-            )}
+            {/* Any authenticated user may create a folder, root included —
+                a self-registered account starts with no admin-provisioned
+                access to anything, so this is also its only way in. */}
+            <button
+              onClick={() => setShowCreateFolder(true)}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              New folder
+            </button>
             {folderId !== null && (
               <label className="cursor-pointer rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
                 Upload
