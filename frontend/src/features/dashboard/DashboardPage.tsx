@@ -7,17 +7,20 @@
 
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FileText, FolderOpen, Home, HardDrive } from 'lucide-react';
+import { FolderOpen, Home, HardDrive } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import { fetchDashboardSummary } from './api';
 import { formatBytes } from '../../lib/fileTypes';
 import { folderColorFor } from '../../lib/folderColors';
 import { relativeDay } from '../../lib/relativeTime';
 import { PageHeader } from '../../components/PageHeader';
+import { DocumentThumbnail } from '../../components/DocumentThumbnail';
 import type { RecentDocumentActivity } from '../../types/api';
 
 function activityLabel(action: RecentDocumentActivity['action']): string {
   switch (action) {
+    case 'DOCUMENT_UPLOADED':
+      return 'Uploaded';
     case 'DOCUMENT_DOWNLOADED':
       return 'Downloaded';
     case 'DOCUMENT_VERSION_UPLOADED':
@@ -124,7 +127,8 @@ export function DashboardPage() {
                         to={`/browse/${activity.folderId}`}
                         className="flex items-center gap-2 text-sm text-slate-800 hover:text-blue-600 hover:underline dark:text-slate-200 dark:hover:text-blue-400"
                       >
-                        <FileText size={16} className="shrink-0 text-slate-400" /> {activity.name}
+                        <DocumentThumbnail documentId={activity.documentId} hasThumbnail={activity.hasThumbnail} mimeType={activity.mimeType} />
+                        {activity.name}
                       </Link>
                       <span className="text-xs text-slate-500 dark:text-slate-400">
                         {activityLabel(activity.action)} · {relativeDay(activity.at)}

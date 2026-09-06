@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { searchDocuments } from './api';
 import { formatBytes } from '../../lib/fileTypes';
 import { DocumentDetailPanel } from '../documents/DocumentDetailPanel';
+import { DocumentThumbnail } from '../../components/DocumentThumbnail';
 
 // §22.7 — results carry the folder breadcrumb for context since matches
 // can come from anywhere the caller has access to, not just the current folder.
@@ -68,7 +69,7 @@ export function SearchResultsPage() {
             >
               <span className="flex flex-col">
                 <span className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
-                  <span aria-hidden>📄</span> {doc.name}
+                  <DocumentThumbnail documentId={doc.id} hasThumbnail={doc.hasThumbnail} mimeType={doc.mimeType} /> {doc.name}
                 </span>
                 <span className="text-xs text-slate-400">{doc.folderName} · {formatBytes(doc.sizeBytes)}</span>
               </span>

@@ -47,10 +47,12 @@ class DashboardService
         $db   = db_connect();
 
         $recentRows = $db->query(<<<'SQL'
-            SELECT al.action, al.created_at, d.id AS document_id, d.name AS document_name, d.folder_id
+            SELECT al.action, al.created_at, d.id AS document_id, d.name AS document_name, d.folder_id,
+              dv.mime_type, dv.thumbnail_s3_key
             FROM audit_logs al
             JOIN documents d ON d.id = al.entity_id AND al.entity_type = 'DOCUMENT'
-            WHERE al.user_id = ? AND al.action IN ('DOCUMENT_DOWNLOADED', 'DOCUMENT_VERSION_UPLOADED')
+            LEFT JOIN document_versions dv ON dv.document_id = d.id AND dv.is_current = 1
+            WHERE al.user_id = ? AND al.action IN ('DOCUMENT_UPLOADED', 'DOCUMENT_DOWNLOADED', 'DOCUMENT_VERSION_UPLOADED')
             ORDER BY al.created_at DESC
             LIMIT 10
         SQL, [$auth->userId()])->getResultArray();
@@ -68,11 +70,13 @@ class DashboardService
 
         return [
             'recentDocuments' => array_map(static fn (array $row): array => [
-                'documentId' => (int) $row['document_id'],
-                'name'       => $row['document_name'],
-                'folderId'   => (int) $row['folder_id'],
-                'action'     => $row['action'],
-                'at'         => $row['created_at'],
+                'documentId'   => (int) $row['document_id'],
+                'name'         => $row['document_name'],
+                'folderId'     => (int) $row['folder_id'],
+                'action'       => $row['action'],
+                'at'           => $row['created_at'],
+                'mimeType'     => $row['mime_type'],
+                'hasThumbnail' => $row['thumbnail_s3_key'] !== null,
             ], $recentRows),
             'storageUsedBytes' => $this->documents->accessibleStorageBytes($auth->userId(), $auth->isAdmin()),
             'sharedFolders'    => array_map(static fn (array $row): array => [

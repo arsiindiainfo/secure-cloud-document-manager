@@ -29,8 +29,10 @@ class DashboardController extends BaseController
                         new OA\Property(property: 'documentId', type: 'integer'),
                         new OA\Property(property: 'name', type: 'string'),
                         new OA\Property(property: 'folderId', type: 'integer'),
-                        new OA\Property(property: 'action', type: 'string', enum: ['DOCUMENT_DOWNLOADED', 'DOCUMENT_VERSION_UPLOADED']),
+                        new OA\Property(property: 'action', type: 'string', enum: ['DOCUMENT_UPLOADED', 'DOCUMENT_DOWNLOADED', 'DOCUMENT_VERSION_UPLOADED']),
                         new OA\Property(property: 'at', type: 'string', format: 'date-time'),
+                        new OA\Property(property: 'mimeType', type: 'string', nullable: true),
+                        new OA\Property(property: 'hasThumbnail', type: 'boolean'),
                     ], type: 'object')),
                     new OA\Property(property: 'storageUsedBytes', type: 'integer'),
                     new OA\Property(property: 'sharedFolders', type: 'array', items: new OA\Items(properties: [

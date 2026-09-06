@@ -7,7 +7,7 @@
 
 import { FolderOpen, Home, Menu, ScrollText, Trash2, Users, X, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { BrandFooter } from '../components/BrandFooter';
 import { BrandLogo } from '../components/BrandLogo';
 import { TopBar } from '../components/TopBar';
@@ -38,7 +38,9 @@ export function AppShell() {
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:flex-row">
       {/* Mobile top bar (logo + hamburger) */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800 md:hidden">
-        <BrandLogo className="h-10" />
+        <Link to="/browse" onClick={() => setMobileNavOpen(false)}>
+          <BrandLogo className="h-10" />
+        </Link>
         <button
           type="button"
           onClick={() => setMobileNavOpen(true)}
@@ -64,7 +66,9 @@ export function AppShell() {
         }`}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 dark:border-slate-700">
-          <BrandLogo className="h-10" />
+          <Link to="/browse" onClick={() => setMobileNavOpen(false)}>
+            <BrandLogo className="h-10" />
+          </Link>
           <button
             type="button"
             onClick={() => setMobileNavOpen(false)}

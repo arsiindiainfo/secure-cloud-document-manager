@@ -10,7 +10,7 @@ import { FolderOpen, Trash2 } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/apiError';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { PageHeader } from '../../components/PageHeader';
-import { FileTypeIcon } from '../../components/FileTypeIcon';
+import { DocumentThumbnail } from '../../components/DocumentThumbnail';
 import { folderColorFor } from '../../lib/folderColors';
 import {
   useTrash,
@@ -164,7 +164,7 @@ export function TrashPage() {
                   <li key={rowKey} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                     <div>
                       <p className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
-                        <FileTypeIcon mimeType={document.mimeType} /> {document.name}
+                        <DocumentThumbnail documentId={document.id} hasThumbnail={document.hasThumbnail} mimeType={document.mimeType} /> {document.name}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{daysRemainingLabel(document.daysRemaining)}</p>
                       {rowErrors[rowKey] && <p className="mt-1 text-xs text-red-600">{rowErrors[rowKey]}</p>}

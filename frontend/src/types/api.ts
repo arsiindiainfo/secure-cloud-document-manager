@@ -147,6 +147,8 @@ export interface RecentDocumentActivity {
   folderId: number;
   action: string;
   at: string;
+  mimeType: string | null;
+  hasThumbnail: boolean;
 }
 
 export interface SharedFolderSummary {

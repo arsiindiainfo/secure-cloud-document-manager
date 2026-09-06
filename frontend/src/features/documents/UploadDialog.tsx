@@ -8,6 +8,7 @@
 import { useEffect } from 'react';
 import { useDocumentUpload } from './useDocumentUpload';
 import { formatBytes, ALLOWED_EXTENSIONS_LABEL } from '../../lib/fileTypes';
+import { FileTypeIcon } from '../../components/FileTypeIcon';
 
 interface UploadDialogProps {
   folderId: number;
@@ -37,8 +38,9 @@ export function UploadDialog({ folderId, initialFiles, onClose }: UploadDialogPr
           {items.map((item) => (
             <li key={item.key} className="text-sm">
               <div className="flex items-center justify-between">
-                <span className="truncate text-slate-800 dark:text-slate-200" title={item.file.name}>
-                  {item.file.name}
+                <span className="flex min-w-0 items-center gap-2 truncate text-slate-800 dark:text-slate-200" title={item.file.name}>
+                  <FileTypeIcon mimeType={item.file.type || null} />
+                  <span className="truncate">{item.file.name}</span>
                 </span>
                 <span className="ml-2 shrink-0 text-xs text-slate-500">{formatBytes(item.file.size)}</span>
               </div>
