@@ -5,9 +5,9 @@
  * name and logo are separately protected -- see TRADEMARK.md.
  */
 
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/useAuth';
-import { BrandFooter } from '../components/BrandFooter';
+import { AppShell } from './AppShell';
 
 export function ProtectedRoute() {
   const { user, isLoading } = useAuth();
@@ -20,15 +20,6 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  // §31.2 — one persistent <BrandFooter/> wrapping every authenticated
-  // screen, rather than each page importing it individually.
-  return (
-    <div className="flex min-h-screen flex-col">
-      <div className="flex-1">
-        <Outlet />
-      </div>
-      <BrandFooter />
-    </div>
-  );
+  return <AppShell />;
 }
 

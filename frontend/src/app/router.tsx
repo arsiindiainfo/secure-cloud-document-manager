@@ -38,6 +38,8 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+    // AppShell (rendered by ProtectedRoute) provides the persistent nav
+    // sidebar/mobile drawer — each child page above renders content only.
   },
 ]);
 

@@ -25,7 +25,7 @@ export function AuditLogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 dark:bg-slate-900">
+    <div>
       <h1 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Audit log</h1>
 
       <div className="mb-4 flex flex-wrap gap-2">
@@ -69,7 +69,8 @@ export function AuditLogPage() {
       {data && data.items.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">No matching events.</p>}
 
       {data && data.items.length > 0 && (
-        <table className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white text-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+        <table className="w-full overflow-hidden bg-white text-sm dark:bg-slate-800">
           <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500 dark:bg-slate-900 dark:text-slate-400">
             <tr>
               <th className="px-4 py-2">When</th>
@@ -101,6 +102,7 @@ export function AuditLogPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

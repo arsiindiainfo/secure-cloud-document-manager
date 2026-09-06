@@ -6,8 +6,6 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { BrandLogo } from '../../components/BrandLogo';
 import { apiErrorMessage } from '../../lib/apiError';
 import { useTrash, useRestoreTrashedFolder, useRestoreTrashedDocument } from './hooks';
 import type { TrashedDocument, TrashedFolder } from '../../types/api';
@@ -21,7 +19,6 @@ function daysRemainingLabel(daysRemaining: number): string {
 // Restoring a folder whose own parent is still deleted comes back as a 422
 // PARENT_FOLDER_NOT_FOUND — surfaced inline on that row rather than as a toast.
 export function TrashPage() {
-  const navigate = useNavigate();
   const { data, isLoading, isError } = useTrash();
   const restoreFolder = useRestoreTrashedFolder();
   const restoreDocument = useRestoreTrashedDocument();
@@ -52,21 +49,10 @@ export function TrashPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex items-center gap-4">
-          <BrandLogo className="h-6" />
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Trash</h1>
-        </div>
-        <button
-          onClick={() => navigate('/browse')}
-          className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
-        >
-          Back to Browse
-        </button>
-      </header>
+    <div>
+      <h1 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Trash</h1>
 
-      <div className="p-6">
+      <div>
         {isLoading && (
           <div className="space-y-2" aria-label="Loading">
             {[...Array(4)].map((_, i) => (

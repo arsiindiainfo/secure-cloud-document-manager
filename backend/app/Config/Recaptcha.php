@@ -22,21 +22,21 @@ class Recaptcha extends BaseConfig
     public string $secretKey = '';
 
     /**
-     * Kill switch, defaults OFF. On demo2, Google's siteverify rejected
-     * every check made through CodeIgniter's HTTP client with
-     * invalid-input-response for otherwise-valid tokens, and switching to
-     * raw curl (see RecaptchaVerifier) didn't resolve it either — disabled
-     * here until that's root-caused. Flip on by setting
-     * `recaptcha.enabled=true` in .env once it's fixed; the secret key
-     * stays configured below in the meantime.
+     * Kill switch, defaults ON. Was disabled after demo2's siteverify
+     * rejected every check with invalid-input-response — most likely the
+     * same root cause as the DB connection bug fixed alongside this
+     * (env vars invisible to CodeIgniter during real request handling
+     * under spark serve; see docker-compose.prod.yml's .env mount).
+     * Re-enabled to test that theory. Set `recaptcha.enabled=false` in
+     * .env to kill it again if it's still broken.
      */
-    public bool $enabled = false;
+    public bool $enabled = true;
 
     public function __construct()
     {
         parent::__construct();
 
         $this->secretKey = (string) env('recaptcha.secretKey', '');
-        $this->enabled   = filter_var(env('recaptcha.enabled', false), FILTER_VALIDATE_BOOLEAN);
+        $this->enabled   = filter_var(env('recaptcha.enabled', true), FILTER_VALIDATE_BOOLEAN);
     }
 }

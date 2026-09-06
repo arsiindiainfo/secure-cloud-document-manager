@@ -6,8 +6,6 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { BrandLogo } from '../../components/BrandLogo';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { apiErrorMessage } from '../../lib/apiError';
 import { useUsers, useInviteUser, useUpdateUser } from './hooks';
@@ -19,7 +17,6 @@ const PAGE_SIZE = 20;
 // §22.10 — ADMIN only (route-gated by RequireRole in router.tsx). Invite
 // (no password field — the server emails one) plus per-row role/status edits.
 export function UserManagementPage() {
-  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const { data, isLoading, isError } = useUsers(page, PAGE_SIZE);
   const inviteUser = useInviteUser(page, PAGE_SIZE);
@@ -67,29 +64,18 @@ export function UserManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex items-center gap-4">
-          <BrandLogo className="h-6" />
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">User management</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowInvite(true)}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Invite
-          </button>
-          <button
-            onClick={() => navigate('/browse')}
-            className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
-          >
-            Back to Browse
-          </button>
-        </div>
-      </header>
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">User management</h1>
+        <button
+          onClick={() => setShowInvite(true)}
+          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Invite
+        </button>
+      </div>
 
-      <div className="p-6">
+      <div>
         {isLoading && (
           <div className="space-y-2" aria-label="Loading">
             {[...Array(6)].map((_, i) => (
@@ -106,7 +92,8 @@ export function UserManagementPage() {
 
         {!isLoading && !isError && users.length > 0 && (
           <>
-            <table className="w-full overflow-hidden rounded-lg border border-slate-200 bg-white text-sm dark:border-slate-700 dark:bg-slate-800">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+            <table className="w-full overflow-hidden bg-white text-sm dark:bg-slate-800">
               <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                 <tr>
                   <th className="px-4 py-2">Name</th>
@@ -160,6 +147,7 @@ export function UserManagementPage() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {totalPages > 1 && (
               <div className="mt-4 flex items-center justify-end gap-2 text-sm">

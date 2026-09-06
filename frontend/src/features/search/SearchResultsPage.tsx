@@ -29,8 +29,8 @@ export function SearchResultsPage() {
   const results = data?.items ?? [];
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 dark:bg-slate-900">
-      <div className="mb-4 flex items-center justify-between">
+    <div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Search results for "{query}"</h1>
         <button
           onClick={() => navigate('/browse')}
