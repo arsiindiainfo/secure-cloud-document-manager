@@ -6,8 +6,12 @@
  */
 
 import { useState } from 'react';
+import { FolderOpen, Trash2 } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/apiError';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { PageHeader } from '../../components/PageHeader';
+import { FileTypeIcon } from '../../components/FileTypeIcon';
+import { folderColorFor } from '../../lib/folderColors';
 import {
   useTrash,
   useRestoreTrashedFolder,
@@ -77,9 +81,16 @@ export function TrashPage() {
     }
   }
 
+  const totalItems = folders.length + documents.length;
+
   return (
     <div>
-      <h1 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Trash</h1>
+      <PageHeader
+        icon={Trash2}
+        iconClassName="bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"
+        title="Trash"
+        subtitle={!isLoading && !isError ? `${totalItems} item${totalItems === 1 ? '' : 's'} · auto-purged after 30 days` : undefined}
+      />
 
       <div>
         {isLoading && (
@@ -94,19 +105,26 @@ export function TrashPage() {
           <p className="rounded-md bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">Couldn't load Trash.</p>
         )}
 
-        {isEmpty && <p className="text-sm text-slate-500 dark:text-slate-400">Trash is empty.</p>}
+        {isEmpty && (
+          <p className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            Trash is empty.
+          </p>
+        )}
 
         {!isLoading && !isError && folders.length > 0 && (
           <section className="mb-6">
             <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Folders</h2>
-            <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
+            <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
               {folders.map((folder) => {
                 const rowKey = `folder-${folder.id}`;
                 return (
                   <li key={rowKey} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                     <div>
                       <p className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
-                        <span aria-hidden>📁</span> {folder.name}
+                        <span className={`flex h-7 w-7 items-center justify-center rounded-md ${folderColorFor(folder.id)}`}>
+                          <FolderOpen size={14} />
+                        </span>
+                        {folder.name}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{daysRemainingLabel(folder.daysRemaining)}</p>
                       {rowErrors[rowKey] && <p className="mt-1 text-xs text-red-600">{rowErrors[rowKey]}</p>}
@@ -139,14 +157,14 @@ export function TrashPage() {
         {!isLoading && !isError && documents.length > 0 && (
           <section>
             <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Documents</h2>
-            <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
+            <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
               {documents.map((document) => {
                 const rowKey = `document-${document.id}`;
                 return (
                   <li key={rowKey} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                     <div>
                       <p className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
-                        <span aria-hidden>📄</span> {document.name}
+                        <FileTypeIcon mimeType={document.mimeType} /> {document.name}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{daysRemainingLabel(document.daysRemaining)}</p>
                       {rowErrors[rowKey] && <p className="mt-1 text-xs text-red-600">{rowErrors[rowKey]}</p>}

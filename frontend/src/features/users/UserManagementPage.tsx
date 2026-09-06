@@ -6,8 +6,11 @@
  */
 
 import { useState } from 'react';
+import { UserPlus, Users as UsersIcon } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { PageHeader } from '../../components/PageHeader';
 import { apiErrorMessage } from '../../lib/apiError';
+import { avatarColorFor, initialsOf } from '../../lib/avatar';
 import { useAuth } from '../auth/useAuth';
 import { useUsers, useInviteUser, useUpdateUser, useDeleteUser } from './hooks';
 import { InviteUserDialog } from './InviteUserDialog';
@@ -38,6 +41,7 @@ export function UserManagementPage() {
 
   const users = data?.items ?? [];
   const totalPages = data?.totalPages ?? 1;
+  const total = data?.total ?? 0;
 
   async function handleRoleChange(user: User, role: Role) {
     setRowError(null);
@@ -87,15 +91,20 @@ export function UserManagementPage() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">User management</h1>
-        <button
-          onClick={() => setShowInvite(true)}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Invite
-        </button>
-      </div>
+      <PageHeader
+        icon={UsersIcon}
+        iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400"
+        title="User management"
+        subtitle={!isLoading && !isError ? `${total} total user${total === 1 ? '' : 's'}` : undefined}
+        actions={
+          <button
+            onClick={() => setShowInvite(true)}
+            className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <UserPlus size={15} /> Invite
+          </button>
+        }
+      />
 
       <div>
         {isLoading && (
@@ -114,7 +123,7 @@ export function UserManagementPage() {
 
         {!isLoading && !isError && users.length > 0 && (
           <>
-            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
             <table className="w-full overflow-hidden bg-white text-sm dark:bg-slate-800">
               <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500 dark:bg-slate-900 dark:text-slate-400">
                 <tr>
@@ -130,7 +139,16 @@ export function UserManagementPage() {
                   const isSuperAdmin = user.email.toLowerCase() === SUPER_ADMIN_EMAIL;
                   return (
                   <tr key={user.id}>
-                    <td className="px-4 py-2 text-slate-800 dark:text-slate-200">{user.name}</td>
+                    <td className="px-4 py-2 text-slate-800 dark:text-slate-200">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ${avatarColorFor(user.email)}`}
+                        >
+                          {initialsOf(user.name)}
+                        </div>
+                        {user.name}
+                      </div>
+                    </td>
                     <td className="px-4 py-2 text-slate-600 dark:text-slate-300">{user.email}</td>
                     <td className="px-4 py-2">
                       <select

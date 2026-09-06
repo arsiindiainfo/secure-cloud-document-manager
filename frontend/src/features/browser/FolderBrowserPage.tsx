@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, FileText, FolderOpen, FolderPlus, Pencil, Share2, Trash2, Upload, Users2 } from 'lucide-react';
+import { CheckCircle2, Clock, Cloud, FileText, FolderOpen, FolderPlus, Pencil, Trash2, Upload, Users2, Zap } from 'lucide-react';
 import { Breadcrumbs } from '../../components/Breadcrumbs';
 import { StatCard } from '../../components/StatCard';
 import { UploadDropzone } from '../../components/UploadDropzone';
@@ -101,13 +101,22 @@ export function FolderBrowserPage() {
 
       {isRoot && (
         <>
-          <div className="mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-6 text-white">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/15">
-              <FolderOpen size={26} />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold">Welcome back, {user?.name}</h1>
-              <p className="text-sm text-blue-100">Access and manage your documents securely in the cloud.</p>
+          <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800">
+            <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-blue-200/40 blur-2xl dark:bg-blue-500/10" />
+            <div className="pointer-events-none absolute -bottom-16 left-1/3 h-40 w-64 rounded-full bg-indigo-200/30 blur-2xl dark:bg-indigo-500/10" />
+            <div className="relative flex items-center gap-4">
+              <div className="relative shrink-0">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-slate-700">
+                  <Cloud size={26} className="text-blue-400" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white shadow">
+                  <FolderOpen size={12} />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Welcome, {user?.name}</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Access and manage your documents securely in the cloud.</p>
+              </div>
             </div>
           </div>
 
@@ -373,14 +382,38 @@ export function FolderBrowserPage() {
 
         {isRoot && (
           <div className="space-y-6">
-            <section className="rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-5 text-white">
-              <h3 className="mb-1 font-semibold">Secure Cloud Storage</h3>
-              <p className="text-sm text-indigo-100">Your files are encrypted, versioned, and backed up automatically.</p>
+            <section className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-blue-50 to-indigo-50 p-5 text-center dark:from-slate-800 dark:to-slate-800">
+              <div className="pointer-events-none absolute -top-6 right-4 h-24 w-24 rounded-full bg-indigo-200/30 blur-xl dark:bg-indigo-500/10" />
+              <div className="relative mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-slate-700">
+                <Cloud size={26} className="text-blue-400" />
+              </div>
+              <h3 className="text-base font-bold leading-snug text-slate-900 dark:text-slate-100">
+                Your documents,
+                <br />
+                always with you
+              </h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Secure, organized and easy to access anytime, anywhere.</p>
+              <ul className="relative mt-4 space-y-2 text-left">
+                {['Easy file management', 'Secure access', 'Share with your team', 'Track activity'].map((label) => (
+                  <li key={label} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                    <CheckCircle2 size={16} className="shrink-0 text-blue-500" />
+                    {label}
+                  </li>
+                ))}
+              </ul>
             </section>
 
             <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-              <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Quick Actions</h3>
+              <h3 className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <Zap size={13} className="text-amber-500" /> Quick Actions
+              </h3>
               <div className="space-y-1">
+                <button
+                  onClick={() => (folders.length > 0 ? openFolder(folders[0].id) : setShowCreateFolder(true))}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700/50"
+                >
+                  <Upload size={16} /> Upload Document
+                </button>
                 <button
                   onClick={() => setShowCreateFolder(true)}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700/50"
@@ -392,12 +425,6 @@ export function FolderBrowserPage() {
                   className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700/50"
                 >
                   <Trash2 size={16} /> View Trash
-                </Link>
-                <Link
-                  to="/dashboard"
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-700/50"
-                >
-                  <Share2 size={16} /> Shared With Me
                 </Link>
               </div>
             </section>

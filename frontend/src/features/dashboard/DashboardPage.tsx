@@ -7,9 +7,13 @@
 
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { FileText, FolderOpen, Home, HardDrive } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import { fetchDashboardSummary } from './api';
 import { formatBytes } from '../../lib/fileTypes';
+import { folderColorFor } from '../../lib/folderColors';
+import { relativeDay } from '../../lib/relativeTime';
+import { PageHeader } from '../../components/PageHeader';
 import type { RecentDocumentActivity } from '../../types/api';
 
 function activityLabel(action: RecentDocumentActivity['action']): string {
@@ -59,12 +63,12 @@ export function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Welcome, {user?.name}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Signed in as {user?.role.toLowerCase()} · {user?.email}
-        </p>
-      </div>
+      <PageHeader
+        icon={Home}
+        iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+        title={`Welcome, ${user?.name}`}
+        subtitle={`Signed in as ${user?.role.toLowerCase()} · ${user?.email}`}
+      />
 
       <div>
         {isLoading && (
@@ -80,7 +84,7 @@ export function DashboardPage() {
         )}
 
         {data && (
-          <section className="mb-6 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+          <section className="mb-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
             <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Your usage</h2>
             <div className="grid gap-4 sm:grid-cols-3">
               <QuotaBar label="Folders" used={data.quotas.folders.used} limit={data.quotas.folders.limit} />
@@ -109,19 +113,21 @@ export function DashboardPage() {
             <section className="lg:col-span-2">
               <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Recently accessed</h2>
               {recentDocuments.length === 0 ? (
-                <p className="text-sm text-slate-500 dark:text-slate-400">No recent activity.</p>
+                <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                  No recent activity.
+                </p>
               ) : (
-                <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
+                <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
                   {recentDocuments.map((activity) => (
                     <li key={`${activity.documentId}-${activity.at}`} className="flex items-center justify-between px-4 py-3">
                       <Link
                         to={`/browse/${activity.folderId}`}
-                        className="text-sm text-slate-800 hover:text-blue-600 hover:underline dark:text-slate-200 dark:hover:text-blue-400"
+                        className="flex items-center gap-2 text-sm text-slate-800 hover:text-blue-600 hover:underline dark:text-slate-200 dark:hover:text-blue-400"
                       >
-                        {activity.name}
+                        <FileText size={16} className="shrink-0 text-slate-400" /> {activity.name}
                       </Link>
                       <span className="text-xs text-slate-500 dark:text-slate-400">
-                        {activityLabel(activity.action)} · {activity.at}
+                        {activityLabel(activity.action)} · {relativeDay(activity.at)}
                       </span>
                     </li>
                   ))}
@@ -132,7 +138,10 @@ export function DashboardPage() {
             <div className="space-y-6">
               <section>
                 <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Storage used</h2>
-                <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
+                    <HardDrive size={18} />
+                  </div>
                   <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatBytes(storageUsedBytes)}</p>
                 </div>
               </section>
@@ -140,16 +149,21 @@ export function DashboardPage() {
               <section>
                 <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Folders shared with you</h2>
                 {sharedFolders.length === 0 ? (
-                  <p className="text-sm text-slate-500 dark:text-slate-400">No shared folders.</p>
+                  <p className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                    No shared folders.
+                  </p>
                 ) : (
-                  <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
+                  <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
                     {sharedFolders.map((folder) => (
                       <li key={folder.id} className="px-4 py-3">
                         <Link
                           to={`/browse/${folder.id}`}
-                          className="text-sm text-slate-800 hover:text-blue-600 hover:underline dark:text-slate-200 dark:hover:text-blue-400"
+                          className="flex items-center gap-2 text-sm text-slate-800 hover:text-blue-600 hover:underline dark:text-slate-200 dark:hover:text-blue-400"
                         >
-                          <span aria-hidden>📁</span> {folder.name}
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-md ${folderColorFor(folder.id)}`}>
+                            <FolderOpen size={14} />
+                          </span>
+                          {folder.name}
                         </Link>
                       </li>
                     ))}

@@ -7,7 +7,17 @@
 
 import { Fragment, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { FileText, FolderOpen, Link2, ScrollText, Users as UsersIcon, type LucideIcon } from 'lucide-react';
+import { PageHeader } from '../../components/PageHeader';
 import { fetchAuditLogs, type AuditLogFilters } from './api';
+import type { AuditLogEntry } from '../../types/api';
+
+const ENTITY_ICON: Record<AuditLogEntry['entityType'], { icon: LucideIcon; className: string }> = {
+  DOCUMENT: { icon: FileText, className: 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400' },
+  FOLDER: { icon: FolderOpen, className: 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400' },
+  USER: { icon: UsersIcon, className: 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400' },
+  SHARE_LINK: { icon: Link2, className: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400' },
+};
 
 // §22.9 — ADMIN only (route-gated by role in App.tsx/router); filterable
 // table, each row expands to show the raw details JSON.
@@ -26,9 +36,14 @@ export function AuditLogPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">Audit log</h1>
+      <PageHeader
+        icon={ScrollText}
+        iconClassName="bg-sky-100 text-sky-600 dark:bg-sky-950 dark:text-sky-400"
+        title="Audit log"
+        subtitle={data ? `${data.total} matching event${data.total === 1 ? '' : 's'}` : undefined}
+      />
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
         <input
           placeholder="Action (e.g. DOCUMENT_DOWNLOADED)"
           onChange={(e) => updateFilter('action', e.target.value)}
@@ -69,7 +84,7 @@ export function AuditLogPage() {
       {data && data.items.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">No matching events.</p>}
 
       {data && data.items.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
         <table className="w-full overflow-hidden bg-white text-sm dark:bg-slate-800">
           <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500 dark:bg-slate-900 dark:text-slate-400">
             <tr>
@@ -80,7 +95,10 @@ export function AuditLogPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-            {data.items.map((entry) => (
+            {data.items.map((entry) => {
+              const entityIcon = ENTITY_ICON[entry.entityType];
+              const EntityIcon = entityIcon.icon;
+              return (
               <Fragment key={entry.id}>
                 <tr
                   className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50"
@@ -88,7 +106,14 @@ export function AuditLogPage() {
                 >
                   <td className="px-4 py-2 text-slate-600 dark:text-slate-300">{entry.createdAt}</td>
                   <td className="px-4 py-2 font-medium text-slate-800 dark:text-slate-200">{entry.action}</td>
-                  <td className="px-4 py-2 text-slate-600 dark:text-slate-300">{entry.entityType} #{entry.entityId}</td>
+                  <td className="px-4 py-2 text-slate-600 dark:text-slate-300">
+                    <span className="flex items-center gap-2">
+                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${entityIcon.className}`}>
+                        <EntityIcon size={13} />
+                      </span>
+                      {entry.entityType} #{entry.entityId}
+                    </span>
+                  </td>
                   <td className="px-4 py-2 text-slate-600 dark:text-slate-300">{entry.userId ?? '—'}</td>
                 </tr>
                 {expandedId === entry.id && (
@@ -99,7 +124,8 @@ export function AuditLogPage() {
                   </tr>
                 )}
               </Fragment>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         </div>

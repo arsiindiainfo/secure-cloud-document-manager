@@ -8,25 +8,9 @@
 import { Bell, ChevronDown, KeyRound, LogOut, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { avatarColorFor, initialsOf } from '../lib/avatar';
 import { useAuth } from '../features/auth/useAuth';
 import { ChangePasswordDialog } from '../features/users/ChangePasswordDialog';
-
-const AVATAR_COLORS = ['bg-indigo-600', 'bg-purple-600', 'bg-pink-600', 'bg-emerald-600', 'bg-amber-600', 'bg-sky-600'];
-
-function initialsOf(name: string | undefined): string {
-  if (!name) return '?';
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? '';
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
-  return (first + last).toUpperCase();
-}
-
-function avatarColorFor(seed: string | undefined): string {
-  if (!seed) return AVATAR_COLORS[0];
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
 
 /** Persistent search + notification + account menu, spanning the main content area (§31.2). */
 export function TopBar() {
