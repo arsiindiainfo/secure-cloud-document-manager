@@ -153,8 +153,13 @@ class UsersService
 
         // Delivery failure should not block the invite itself succeeding —
         // the ADMIN can still relay the temporary password out-of-band.
+        // CI4's Email::send() reports SMTP failures by returning false, not
+        // by throwing — a bare try/catch around it silently swallows those,
+        // so the return value has to be checked too.
         try {
-            $emailService->send();
+            if (! $emailService->send()) {
+                log_message('error', 'Failed to send invite email: ' . $emailService->printDebugger(['headers']));
+            }
         } catch (\Throwable $e) {
             log_message('error', 'Failed to send invite email: ' . $e->getMessage());
         }
