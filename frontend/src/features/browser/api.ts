@@ -6,7 +6,12 @@
  */
 
 import { apiClient } from '../../lib/apiClient';
-import type { ApiSuccess, Folder, FolderChildren } from '../../types/api';
+import type { ApiSuccess, Folder, FolderChildren, FolderDetail } from '../../types/api';
+
+export async function fetchFolder(id: number): Promise<FolderDetail> {
+  const { data } = await apiClient.get<ApiSuccess<FolderDetail>>(`/folders/${id}`);
+  return data.data;
+}
 
 export async function fetchFolderChildren(folderId: number | null): Promise<FolderChildren> {
   const path = folderId === null ? '/folders/children' : `/folders/${folderId}/children`;

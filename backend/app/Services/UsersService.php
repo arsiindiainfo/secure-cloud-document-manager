@@ -66,6 +66,40 @@ class UsersService
         return ['items' => $items, 'total' => $total];
     }
 
+    /**
+     * §22.5 — lightweight lookup for the Share dialog's "invite a person"
+     * autocomplete. Deliberately not the full ADMIN user-management read
+     * (§15) — any authenticated user may call this, so it returns only
+     * id/name/email, never role/status, and never the caller themselves.
+     *
+     * @return list<array{id: int, name: string, email: string}>
+     */
+    public function search(string $query, int $excludeUserId): array
+    {
+        $query = trim($query);
+        if (mb_strlen($query) < 2) {
+            return [];
+        }
+
+        $rows = $this->users
+            ->select('id, name, email')
+            ->groupStart()
+                ->like('name', $query)
+                ->orLike('email', $query)
+            ->groupEnd()
+            ->where('status', 'ACTIVE')
+            ->where('id !=', $excludeUserId)
+            ->orderBy('name', 'asc')
+            ->asArray()
+            ->findAll(8);
+
+        return array_map(static fn (array $row): array => [
+            'id'    => (int) $row['id'],
+            'name'  => $row['name'],
+            'email' => $row['email'],
+        ], $rows);
+    }
+
     public function updateRoleStatus(int $userId, ?string $role, ?string $status): User
     {
         $user = $this->users->find($userId);

@@ -96,6 +96,10 @@ export interface BreadcrumbEntry {
   name: string;
 }
 
+export interface FolderDetail extends Folder {
+  effectivePermission: Permission;
+}
+
 export interface FolderChildren {
   folders: Folder[];
   documents: Document[];

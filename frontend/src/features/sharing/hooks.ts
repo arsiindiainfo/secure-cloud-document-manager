@@ -7,32 +7,33 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from './api';
+import type { ShareTarget } from './api';
 import type { Permission } from '../../types/api';
 
-export function grantsKey(documentId: number) {
-  return ['document', documentId, 'permissions'] as const;
+export function grantsKey(target: ShareTarget) {
+  return ['share', target.type, target.id, 'permissions'] as const;
 }
 export function shareLinksKey(documentId: number) {
   return ['document', documentId, 'share-links'] as const;
 }
 
-export function useGrants(documentId: number) {
-  return useQuery({ queryKey: grantsKey(documentId), queryFn: () => api.fetchGrants(documentId) });
+export function useGrants(target: ShareTarget) {
+  return useQuery({ queryKey: grantsKey(target), queryFn: () => api.fetchGrants(target) });
 }
 
-export function useGrantAccess(documentId: number) {
+export function useGrantAccess(target: ShareTarget) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ email, permission }: { email: string; permission: Permission }) => api.grantAccess(documentId, email, permission),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: grantsKey(documentId) }),
+    mutationFn: ({ email, permission }: { email: string; permission: Permission }) => api.grantAccess(target, email, permission),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: grantsKey(target) }),
   });
 }
 
-export function useRevokeAccess(documentId: number) {
+export function useRevokeAccess(target: ShareTarget) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (userId: number) => api.revokeAccess(documentId, userId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: grantsKey(documentId) }),
+    mutationFn: (userId: number) => api.revokeAccess(target, userId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: grantsKey(target) }),
   });
 }
 
@@ -57,3 +58,10 @@ export function useRevokeShareLink(documentId: number) {
   });
 }
 
+export function useUserSearch(query: string) {
+  return useQuery({
+    queryKey: ['user-search', query],
+    queryFn: () => api.searchUsers(query),
+    enabled: query.trim().length >= 2,
+  });
+}

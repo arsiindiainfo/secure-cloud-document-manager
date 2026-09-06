@@ -10,6 +10,7 @@
 namespace App\Models;
 
 use App\Exceptions\DocumentNotFoundException;
+use App\Exceptions\FolderNotFoundException;
 use App\Exceptions\InternalErrorException;
 use App\Exceptions\LastOwnerException;
 use App\Exceptions\PermissionGrantNotFoundException;
@@ -58,10 +59,50 @@ class DocumentPermissionModel extends Model
     /** @return list<array{userId: int, name: string, email: string, permission: string, grantedAt: string}> */
     public function listForDocument(int $documentId): array
     {
+        return $this->listForColumn('document_id', $documentId);
+    }
+
+    public function grantFolder(int $folderId, int $userId, string $permission, int $grantedBy): void
+    {
+        $out = (new StoredProcedure($this->db))->call('sp_folder_permission_grant', [
+            $folderId, $userId, $permission, $grantedBy,
+        ], ['p_status_code', 'p_message']);
+
+        match ($out['p_status_code']) {
+            'OK'               => null,
+            'FOLDER_NOT_FOUND' => throw new FolderNotFoundException(),
+            'USER_NOT_FOUND'   => throw new UserNotFoundException(),
+            default            => throw new InternalErrorException($out['p_message'] ?? 'Failed to grant access.'),
+        };
+    }
+
+    public function revokeFolder(int $folderId, int $userId, int $revokedBy): void
+    {
+        $out = (new StoredProcedure($this->db))->call('sp_folder_permission_revoke', [
+            $folderId, $userId, $revokedBy,
+        ], ['p_status_code', 'p_message']);
+
+        match ($out['p_status_code']) {
+            'OK'              => null,
+            'GRANT_NOT_FOUND' => throw new PermissionGrantNotFoundException(),
+            'LAST_OWNER'      => throw new LastOwnerException(),
+            default           => throw new InternalErrorException($out['p_message'] ?? 'Failed to revoke access.'),
+        };
+    }
+
+    /** @return list<array{userId: int, name: string, email: string, permission: string, grantedAt: string}> */
+    public function listForFolder(int $folderId): array
+    {
+        return $this->listForColumn('folder_id', $folderId);
+    }
+
+    /** @return list<array{userId: int, name: string, email: string, permission: string, grantedAt: string}> */
+    private function listForColumn(string $column, int $id): array
+    {
         $rows = $this->db->table('document_permissions')
-            ->select('document_permissions.user_id, users.name, users.email, document_permissions.permission, document_permissions.granted_at')
+            ->select("document_permissions.user_id, users.name, users.email, document_permissions.permission, document_permissions.granted_at")
             ->join('users', 'users.id = document_permissions.user_id')
-            ->where('document_permissions.document_id', $documentId)
+            ->where("document_permissions.{$column}", $id)
             ->orderBy('document_permissions.granted_at', 'asc')
             ->get()->getResultArray();
 

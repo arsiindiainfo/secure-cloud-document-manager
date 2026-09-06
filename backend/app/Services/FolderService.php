@@ -138,6 +138,19 @@ class FolderService
         $this->folders->restore($folderId, Services::authContext()->userId());
     }
 
+    /** @return array<string, mixed> the folder plus the caller's effective permission on it (VIEWER+) */
+    public function show(int $folderId): array
+    {
+        $folder = $this->authorize($folderId, 'VIEWER');
+        $auth   = Services::authContext();
+
+        $permission = $auth->isAdmin()
+            ? 'OWNER'
+            : ($this->permissions->folderPermission($auth->userId(), $folderId) ?? 'VIEWER');
+
+        return [...$folder->toArray(), 'effectivePermission' => $permission];
+    }
+
     /**
      * @return array{folders: list<Folder>, documents: list<\App\Entities\Document>, breadcrumb: list<array{id: int, name: string}>}
      */

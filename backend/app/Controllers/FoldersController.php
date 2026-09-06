@@ -52,6 +52,27 @@ class FoldersController extends BaseController
     }
 
     #[OA\Get(
+        path: '/folders/{id}',
+        tags: ['Folders'],
+        summary: 'Folder detail plus the caller\'s effective permission (VIEWER+)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\PathParameter(name: 'id', schema: new OA\Schema(type: 'integer'))],
+        responses: [
+            new OA\Response(response: 200, description: 'Folder', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'data', ref: '#/components/schemas/Folder'),
+            ])),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+        ],
+    )]
+    public function show(int $id): ResponseInterface
+    {
+        $result = (new FolderService())->show($id);
+
+        return $this->ok($result);
+    }
+
+    #[OA\Get(
         path: '/folders/{id}/children',
         tags: ['Folders'],
         summary: "Browse a folder's contents (VIEWER+); \"root\" lists the caller's accessible top-level folders",

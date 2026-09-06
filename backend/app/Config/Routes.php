@@ -36,6 +36,7 @@ $routes->group('api/v1', function ($routes) {
 
         $routes->get('users/me', 'UsersController::me');
         $routes->put('users/me/password', 'UsersController::changePassword');
+        $routes->get('users/search', 'UsersController::search');
 
         $routes->group('users', ['filter' => 'role:ADMIN'], function ($routes) {
             $routes->post('/', 'UsersController::invite');
@@ -51,6 +52,12 @@ $routes->group('api/v1', function ($routes) {
         $routes->put('folders/(:num)', 'FoldersController::update/$1');
         $routes->delete('folders/(:num)', 'FoldersController::delete/$1');
         $routes->post('folders/(:num)/restore', 'FoldersController::restore/$1');
+        $routes->get('folders/(:num)', 'FoldersController::show/$1');
+
+        // §18 (folder variant) — sharing: internal grants only, no external links
+        $routes->post('folders/(:num)/permissions', 'FolderSharingController::grant/$1');
+        $routes->get('folders/(:num)/permissions', 'FolderSharingController::listGrants/$1');
+        $routes->delete('folders/(:num)/permissions/(:num)', 'FolderSharingController::revoke/$1/$2');
 
         // §17/§24 — documents, upload flow, versions, search
         $routes->get('documents', 'DocumentsController::index');

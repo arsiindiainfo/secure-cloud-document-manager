@@ -64,6 +64,33 @@ class UsersController extends BaseController
         return $this->ok(['message' => 'Password changed.']);
     }
 
+    #[OA\Get(
+        path: '/users/search',
+        tags: ['Users'],
+        summary: 'Lightweight id/name/email lookup for the Share dialog\'s autocomplete (any authenticated user)',
+        security: [['bearerAuth' => []]],
+        parameters: [new OA\Parameter(name: 'q', in: 'query', required: true, schema: new OA\Schema(type: 'string', minLength: 2))],
+        responses: [
+            new OA\Response(response: 200, description: 'Matching users', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'data', type: 'array', items: new OA\Items(properties: [
+                    new OA\Property(property: 'id', type: 'integer'),
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'email', type: 'string'),
+                ], type: 'object')),
+            ])),
+        ],
+    )]
+    public function search(): ResponseInterface
+    {
+        $result = (new UsersService())->search(
+            (string) $this->request->getGet('q'),
+            service('authContext')->userId(),
+        );
+
+        return $this->ok($result);
+    }
+
     #[OA\Post(
         path: '/users',
         tags: ['Users'],
