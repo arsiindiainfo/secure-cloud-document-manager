@@ -21,7 +21,7 @@ use OpenApi\Attributes as OA;
 class PublicShareController extends BaseController
 {
     #[OA\Get(
-        path: '/s/{token}',
+        path: '/api/v1/s/{token}',
         tags: ['Public'],
         summary: 'Resolve an external share link — no auth, trust is the token itself',
         parameters: [new OA\PathParameter(name: 'token', schema: new OA\Schema(type: 'string'), description: '43-character URL-safe base64 token')],

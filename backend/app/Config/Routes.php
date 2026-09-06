@@ -84,10 +84,15 @@ $routes->group('api/v1', function ($routes) {
     // §9.3/§19 — internal, HMAC-signed (never a user JWT): deliberately
     // outside the jwtAuth-filtered group above.
     $routes->post('internal/processing-callback', 'ProcessingCallbackController::callback', ['filter' => 'internalHmac']);
-});
 
-// §12/§19 — the one public, unversioned route: trust is the token itself.
-$routes->get('s/(:any)', 'PublicShareController::resolve/$1');
+    // §12/§19 — public share-link resolve: trust is the 43-char token
+    // itself, no jwtAuth filter. Lives under api/v1 (not a bare top-level
+    // route) so it goes through the same nginx /api/ proxy as every other
+    // endpoint — a bare `/s/(:any)` never reached this backend in
+    // production, since nginx only proxies /api/ to it and serves
+    // everything else (including /s/...) from the frontend's static files.
+    $routes->get('s/(:any)', 'PublicShareController::resolve/$1');
+});
 
 // §26 — OpenAPI docs, non-production only (guarded inside the controller).
 $routes->get('api/docs', 'OpenApiController::ui');
