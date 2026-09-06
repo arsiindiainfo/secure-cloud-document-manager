@@ -80,6 +80,12 @@ class Validation extends BaseConfig
         'status' => 'permit_empty|in_list[ACTIVE,DISABLED]',
     ];
 
+    /** @var array<string, string> */
+    public array $usersChangePassword = [
+        'currentPassword' => 'required',
+        'newPassword'     => 'required|min_length[8]',
+    ];
+
     // Folder/document names may not contain path-separator-like characters
     // — they end up sanitized further still before ever building an S3 key
     // (§5), this just rejects the obviously-invalid case fast.

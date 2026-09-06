@@ -7,6 +7,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from './api';
+import { deleteDocument } from '../documents/api';
 
 export function folderChildrenKey(folderId: number | null) {
   return ['folder', folderId ?? 'root', 'children'] as const;
@@ -40,6 +41,14 @@ export function useDeleteFolder(parentFolderId: number | null) {
   return useMutation({
     mutationFn: (id: number) => api.deleteFolder(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: folderChildrenKey(parentFolderId) }),
+  });
+}
+
+export function useDeleteDocumentInFolder(folderId: number | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteDocument(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: folderChildrenKey(folderId) }),
   });
 }
 

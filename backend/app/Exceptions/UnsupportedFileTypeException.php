@@ -11,7 +11,7 @@ namespace App\Exceptions;
 
 class UnsupportedFileTypeException extends ApiException
 {
-    public function __construct(string $message = 'This file type is not supported.')
+    public function __construct(string $message = 'This file type is not supported. Allowed: PDF, Word, Excel, PowerPoint, CSV, TXT, RTF, PNG, JPG, GIF, WebP, ZIP.')
     {
         parent::__construct(400, 'UNSUPPORTED_FILE_TYPE', $message);
     }

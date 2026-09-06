@@ -10,19 +10,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Breadcrumbs } from '../../components/Breadcrumbs';
 import { UploadDropzone } from '../../components/UploadDropzone';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { DocumentThumbnail } from '../../components/DocumentThumbnail';
+import { apiErrorMessage } from '../../lib/apiError';
 import { useAuth } from '../auth/useAuth';
-import { useFolderChildren, useCreateFolder, useDeleteFolder, useRenameFolder } from './hooks';
+import { useFolderChildren, useCreateFolder, useDeleteFolder, useRenameFolder, useDeleteDocumentInFolder } from './hooks';
 import { CreateFolderDialog } from './CreateFolderDialog';
 import { RenameFolderDialog } from './RenameFolderDialog';
 import { UploadDialog } from '../documents/UploadDialog';
 import { DocumentDetailPanel } from '../documents/DocumentDetailPanel';
+import { ShareDialogLoader } from '../sharing/ShareDialogLoader';
 import type { Document, Folder } from '../../types/api';
 
 function FolderIcon() {
   return <span aria-hidden>📁</span>;
-}
-function DocumentIcon() {
-  return <span aria-hidden>📄</span>;
 }
 
 export function FolderBrowserPage() {
@@ -35,21 +35,31 @@ export function FolderBrowserPage() {
   const createFolder = useCreateFolder(folderId);
   const deleteFolder = useDeleteFolder(folderId);
   const renameFolder = useRenameFolder(folderId);
+  const deleteDocument = useDeleteDocumentInFolder(folderId);
 
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [pendingUploadFiles, setPendingUploadFiles] = useState<File[] | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Folder | null>(null);
   const [renameTarget, setRenameTarget] = useState<Folder | null>(null);
   const [openDocumentId, setOpenDocumentId] = useState<number | null>(null);
-  const [autoOpenShare, setAutoOpenShare] = useState(false);
-
-  function openDocumentShare(id: number) {
-    setAutoOpenShare(true);
-    setOpenDocumentId(id);
-  }
+  const [shareDocumentId, setShareDocumentId] = useState<number | null>(null);
+  const [deleteDocumentTarget, setDeleteDocumentTarget] = useState<Document | null>(null);
+  const [documentRowError, setDocumentRowError] = useState<{ id: number; message: string } | null>(null);
 
   function openFolder(id: number) {
     navigate(`/browse/${id}`);
+  }
+
+  async function handleDeleteDocument() {
+    if (!deleteDocumentTarget) return;
+    const target = deleteDocumentTarget;
+    try {
+      await deleteDocument.mutateAsync(target.id);
+      setDeleteDocumentTarget(null);
+    } catch (err) {
+      setDocumentRowError({ id: target.id, message: apiErrorMessage(err, 'Could not delete document') });
+      setDeleteDocumentTarget(null);
+    }
   }
 
   function handleFilesSelected(files: File[]) {
@@ -176,19 +186,34 @@ export function FolderBrowserPage() {
                   className="flex cursor-pointer items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50"
                   onClick={() => setOpenDocumentId(doc.id)}
                 >
-                  <span className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
-                    <DocumentIcon /> {doc.name}
-                    <span className="text-xs text-slate-400">v{doc.currentVersion}</span>
+                  <div>
+                    <span className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">
+                      <DocumentThumbnail documentId={doc.id} hasThumbnail={doc.hasThumbnail} mimeType={doc.mimeType} /> {doc.name}
+                      <span className="text-xs text-slate-400">v{doc.currentVersion}</span>
+                    </span>
+                    {documentRowError?.id === doc.id && <p className="mt-1 text-xs text-red-600">{documentRowError.message}</p>}
+                  </div>
+                  <span className="flex gap-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShareDocumentId(doc.id);
+                      }}
+                      className="text-xs text-slate-500 hover:underline dark:text-slate-400"
+                    >
+                      Share
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDocumentRowError(null);
+                        setDeleteDocumentTarget(doc);
+                      }}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
                   </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDocumentShare(doc.id);
-                    }}
-                    className="text-xs text-slate-500 hover:underline dark:text-slate-400"
-                  >
-                    Share
-                  </button>
                 </li>
               ))}
             </ul>
@@ -225,16 +250,22 @@ export function FolderBrowserPage() {
         />
       )}
 
-      {openDocumentId !== null && folderId !== null && (
-        <DocumentDetailPanel
-          documentId={openDocumentId}
-          folderId={folderId}
-          autoOpenShare={autoOpenShare}
-          onClose={() => {
-            setOpenDocumentId(null);
-            setAutoOpenShare(false);
-          }}
+      {deleteDocumentTarget && (
+        <ConfirmDialog
+          title={`Delete "${deleteDocumentTarget.name}"?`}
+          message="Moves to Trash — can be restored within 30 days."
+          confirmLabel="Delete"
+          onConfirm={handleDeleteDocument}
+          onCancel={() => setDeleteDocumentTarget(null)}
         />
+      )}
+
+      {openDocumentId !== null && folderId !== null && (
+        <DocumentDetailPanel documentId={openDocumentId} folderId={folderId} onClose={() => setOpenDocumentId(null)} />
+      )}
+
+      {shareDocumentId !== null && (
+        <ShareDialogLoader documentId={shareDocumentId} onClose={() => setShareDocumentId(null)} />
       )}
     </div>
   );

@@ -105,3 +105,8 @@ export async function fetchPreviewUrl(documentId: number): Promise<PresignedUrlR
   return data.data;
 }
 
+export async function fetchThumbnailUrl(documentId: number): Promise<PresignedUrlResult> {
+  const { data } = await apiClient.get<ApiSuccess<PresignedUrlResult>>(`/documents/${documentId}/thumbnail`);
+  return data.data;
+}
+

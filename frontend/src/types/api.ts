@@ -69,6 +69,8 @@ export interface Document {
   description: string | null;
   tags: string[];
   currentVersion: number;
+  mimeType: string | null;
+  hasThumbnail: boolean;
   createdBy: number;
   createdAt: string;
   updatedAt: string;

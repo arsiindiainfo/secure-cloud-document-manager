@@ -8,6 +8,7 @@
 import {
   FolderOpen,
   Home,
+  KeyRound,
   LogOut,
   Menu,
   ScrollText,
@@ -22,6 +23,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { BrandFooter } from '../components/BrandFooter';
 import { BrandLogo } from '../components/BrandLogo';
 import { useAuth } from '../features/auth/useAuth';
+import { ChangePasswordDialog } from '../features/users/ChangePasswordDialog';
 
 const NAV_ITEMS: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/browse', label: 'Browse', icon: FolderOpen },
@@ -62,6 +64,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const navItems = user?.role === 'ADMIN' ? [...NAV_ITEMS, ...ADMIN_NAV_ITEMS] : NAV_ITEMS;
 
   function handleSearchSubmit(e: React.FormEvent) {
@@ -74,7 +77,7 @@ export function AppShell() {
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-900 md:flex-row">
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800 md:hidden">
-        <BrandLogo className="h-8" />
+        <BrandLogo className="h-10" />
         <button
           type="button"
           onClick={() => setMobileNavOpen(true)}
@@ -100,7 +103,7 @@ export function AppShell() {
         }`}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 dark:border-slate-700">
-          <BrandLogo className="h-8" />
+          <BrandLogo className="h-10" />
           <button
             type="button"
             onClick={() => setMobileNavOpen(false)}
@@ -155,13 +158,22 @@ export function AppShell() {
           <div className="min-w-0 flex-1">
             <div className="truncate text-xs font-medium text-slate-700 dark:text-slate-200">{user?.name}</div>
             <div className="truncate text-xs text-slate-400 dark:text-slate-500">{user?.email}</div>
-            <button
-              onClick={() => void logout()}
-              className="mt-1 flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              <LogOut size={12} />
-              Sign out
-            </button>
+            <div className="mt-1 flex items-center gap-3">
+              <button
+                onClick={() => setShowChangePassword(true)}
+                className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              >
+                <KeyRound size={12} />
+                Password
+              </button>
+              <button
+                onClick={() => void logout()}
+                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+              >
+                <LogOut size={12} />
+                Sign out
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -172,6 +184,13 @@ export function AppShell() {
         </main>
         <BrandFooter />
       </div>
+
+      {showChangePassword && (
+        <ChangePasswordDialog
+          onClose={() => setShowChangePassword(false)}
+          onChanged={() => void logout()}
+        />
+      )}
     </div>
   );
 }

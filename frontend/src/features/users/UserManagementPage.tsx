@@ -126,7 +126,9 @@ export function UserManagementPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {users.map((user) => (
+                {users.map((user) => {
+                  const isSuperAdmin = user.email.toLowerCase() === SUPER_ADMIN_EMAIL;
+                  return (
                   <tr key={user.id}>
                     <td className="px-4 py-2 text-slate-800 dark:text-slate-200">{user.name}</td>
                     <td className="px-4 py-2 text-slate-600 dark:text-slate-300">{user.email}</td>
@@ -134,8 +136,8 @@ export function UserManagementPage() {
                       <select
                         value={user.role}
                         onChange={(e) => void handleRoleChange(user, e.target.value as Role)}
-                        disabled={updateUser.isPending}
-                        className="rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        disabled={updateUser.isPending || isSuperAdmin}
+                        className="rounded-md border border-slate-300 px-2 py-1 text-xs disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                       >
                         <option value="ADMIN">Admin</option>
                         <option value="MANAGER">Manager</option>
@@ -155,16 +157,18 @@ export function UserManagementPage() {
                     </td>
                     <td className="px-4 py-2 text-right">
                       <div className="flex justify-end gap-3">
-                        <button
-                          onClick={() => void handleToggleStatus(user)}
-                          disabled={updateUser.isPending}
-                          className={`text-xs hover:underline disabled:opacity-60 ${
-                            user.status === 'ACTIVE' ? 'text-red-600' : 'text-blue-600'
-                          }`}
-                        >
-                          {user.status === 'ACTIVE' ? 'Disable' : 'Enable'}
-                        </button>
-                        {user.email.toLowerCase() !== SUPER_ADMIN_EMAIL && user.id !== currentUser?.id && (
+                        {!isSuperAdmin && (
+                          <button
+                            onClick={() => void handleToggleStatus(user)}
+                            disabled={updateUser.isPending}
+                            className={`text-xs hover:underline disabled:opacity-60 ${
+                              user.status === 'ACTIVE' ? 'text-red-600' : 'text-blue-600'
+                            }`}
+                          >
+                            {user.status === 'ACTIVE' ? 'Disable' : 'Enable'}
+                          </button>
+                        )}
+                        {!isSuperAdmin && user.id !== currentUser?.id && (
                           <button
                             onClick={() => setDeleteTarget(user)}
                             disabled={deleteUser.isPending}
@@ -177,7 +181,8 @@ export function UserManagementPage() {
                       {rowError?.id === user.id && <p className="mt-1 text-xs text-red-600">{rowError.message}</p>}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
             </div>

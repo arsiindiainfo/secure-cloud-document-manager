@@ -45,3 +45,7 @@ export async function deleteUser(id: number): Promise<void> {
   await apiClient.delete(`/users/${id}`);
 }
 
+export async function changeOwnPassword(currentPassword: string, newPassword: string): Promise<void> {
+  await apiClient.put('/users/me/password', { currentPassword, newPassword });
+}
+

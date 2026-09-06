@@ -39,7 +39,7 @@ export function PublicSharePage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4 dark:bg-slate-900">
       <div className="w-full max-w-sm rounded-lg bg-white p-8 text-center shadow-lg dark:bg-slate-800">
         <BrandLogo className="mx-auto mb-4 h-8" />
         <p className="mb-6 text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">

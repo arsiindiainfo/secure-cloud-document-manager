@@ -7,7 +7,7 @@
 
 import { useEffect } from 'react';
 import { useDocumentUpload } from './useDocumentUpload';
-import { formatBytes } from '../../lib/fileTypes';
+import { formatBytes, ALLOWED_EXTENSIONS_LABEL } from '../../lib/fileTypes';
 
 interface UploadDialogProps {
   folderId: number;
@@ -30,7 +30,8 @@ export function UploadDialog({ folderId, initialFiles, onClose }: UploadDialogPr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div role="dialog" aria-modal="true" className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-slate-800">
-        <h2 className="mb-4 text-base font-semibold text-slate-900 dark:text-slate-100">Uploading files</h2>
+        <h2 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100">Uploading files</h2>
+        <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">Allowed: {ALLOWED_EXTENSIONS_LABEL}</p>
 
         <ul className="mb-5 max-h-72 space-y-3 overflow-y-auto">
           {items.map((item) => (

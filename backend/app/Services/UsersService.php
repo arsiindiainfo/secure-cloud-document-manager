@@ -11,6 +11,7 @@ namespace App\Services;
 
 use App\Entities\User;
 use App\Exceptions\ForbiddenActionException;
+use App\Exceptions\IncorrectPasswordException;
 use App\Exceptions\UserNotFoundException;
 use App\Libraries\EmailTemplate;
 use App\Models\AuditLogModel;
@@ -67,6 +68,11 @@ class UsersService
 
     public function updateRoleStatus(int $userId, ?string $role, ?string $status): User
     {
+        $user = $this->users->find($userId);
+        if ($user !== null && strcasecmp($user->email, self::SUPER_ADMIN_EMAIL) === 0) {
+            throw new ForbiddenActionException('This account\'s role and status cannot be changed.');
+        }
+
         $fields = array_filter(['role' => $role, 'status' => $status], static fn ($v) => $v !== null);
         $this->users->update($userId, $fields);
 
@@ -106,6 +112,21 @@ class UsersService
         $this->users->delete($userId);
         $this->refreshTokens->revokeAllForUser($userId);
         $this->auditLog->record($requestedBy, 'USER_DELETED', 'USER', $userId, ['email' => $user->email]);
+    }
+
+    public function changePassword(int $userId, string $currentPassword, string $newPassword): void
+    {
+        /** @var User $user */
+        $user = $this->users->find($userId);
+
+        if (! password_verify($currentPassword, $user->password_hash)) {
+            throw new IncorrectPasswordException();
+        }
+
+        $this->users->update($userId, ['password_hash' => password_hash($newPassword, PASSWORD_BCRYPT)]);
+        // Every other session (this device's included) needs to re-authenticate
+        // with the new password — same as a DISABLE, minus the status flip.
+        $this->refreshTokens->revokeAllForUser($userId);
     }
 
     private function sendInviteEmail(string $email, string $name, string $temporaryPassword): void

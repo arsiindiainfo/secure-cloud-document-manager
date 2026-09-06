@@ -33,6 +33,7 @@ $routes->group('api/v1', function ($routes) {
         $routes->post('auth/logout', 'AuthController::logout');
 
         $routes->get('users/me', 'UsersController::me');
+        $routes->put('users/me/password', 'UsersController::changePassword');
 
         $routes->group('users', ['filter' => 'role:ADMIN'], function ($routes) {
             $routes->post('/', 'UsersController::invite');

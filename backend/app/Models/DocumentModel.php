@@ -140,10 +140,38 @@ class DocumentModel extends Model
         };
     }
 
-    /** @return list<Document> */
+    /**
+     * §22.3 — listing needs mimeType/hasThumbnail too (icon/thumbnail per
+     * row), which the Document entity's toArray() deliberately omits for
+     * the detail-oriented endpoints (field minimalism, §12) — so this
+     * bypasses entity hydration and shapes the row directly, the same way
+     * search() already does.
+     *
+     * @return list<array<string, mixed>>
+     */
     public function childDocuments(int $folderId): array
     {
-        return $this->where('folder_id', $folderId)->orderBy('name', 'asc')->findAll();
+        $rows = $this->select('documents.*, dv.mime_type, dv.thumbnail_s3_key')
+            ->join('document_versions dv', 'dv.document_id = documents.id AND dv.is_current = 1', 'left')
+            ->where('documents.folder_id', $folderId)
+            ->orderBy('documents.name', 'asc')
+            ->asArray()
+            ->findAll();
+
+        return array_map(static fn (array $row): array => [
+            'id'             => (int) $row['id'],
+            'folderId'       => (int) $row['folder_id'],
+            'name'           => $row['name'],
+            'description'    => $row['description'],
+            'tags'           => $row['tags'] === null || $row['tags'] === '' ? [] : array_map('trim', explode(',', $row['tags'])),
+            'currentVersion' => (int) $row['current_version'],
+            'mimeType'       => $row['mime_type'],
+            'hasThumbnail'   => $row['thumbnail_s3_key'] !== null,
+            'createdBy'      => (int) $row['created_by'],
+            'createdAt'      => $row['created_at'],
+            'updatedAt'      => $row['updated_at'],
+            'deletedAt'      => $row['deleted_at'],
+        ], $rows);
     }
 
     /**

@@ -38,6 +38,32 @@ class UsersController extends BaseController
         return $this->ok((new UsersService())->me());
     }
 
+    #[OA\Put(
+        path: '/users/me/password',
+        tags: ['Users'],
+        summary: "Change the caller's own password",
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['currentPassword', 'newPassword'],
+            properties: [
+                new OA\Property(property: 'currentPassword', type: 'string'),
+                new OA\Property(property: 'newPassword', type: 'string', minLength: 8),
+            ],
+        )),
+        responses: [
+            new OA\Response(response: 200, description: 'Changed — every refresh token is revoked, including this session\'s'),
+            new OA\Response(response: 400, description: '400 INCORRECT_PASSWORD or VALIDATION_ERROR', content: new OA\JsonContent(ref: '#/components/schemas/ErrorEnvelope')),
+        ],
+    )]
+    public function changePassword(): ResponseInterface
+    {
+        $data = $this->validated('usersChangePassword');
+
+        (new UsersService())->changePassword(service('authContext')->userId(), $data['currentPassword'], $data['newPassword']);
+
+        return $this->ok(['message' => 'Password changed.']);
+    }
+
     #[OA\Post(
         path: '/users',
         tags: ['Users'],
