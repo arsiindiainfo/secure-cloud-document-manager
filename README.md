@@ -1,6 +1,8 @@
 <!-- Secure Cloud Document Manager — Copyright (c) 2026 Arsi India Info. Licensed under the MIT License; see LICENSE. -->
 <!-- The "Arsi India Info" name and logo are separately protected — see TRADEMARK.md. -->
 
+![Arsi India Info](./docs/arsi-logo.png)
+
 # Secure Cloud Document Manager
 
 A Dropbox/Google Drive-style business document manager: folders, versioned documents, internal permission grants,
