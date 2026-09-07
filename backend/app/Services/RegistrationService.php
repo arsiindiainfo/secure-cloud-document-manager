@@ -60,18 +60,13 @@ class RegistrationService
 
     private function sendVerificationEmail(string $email, string $name, string $token): void
     {
-        $safeName = esc($name, 'html');
-        $body     = "<p>Hi {$safeName},</p>"
-            . '<p>Thanks for signing up for Secure Cloud Document Manager — confirm this is your email address to finish creating your account.</p>';
+        $verifyUrl = rtrim(config('App')->frontendUrl, '/') . '/verify-email/' . $token;
 
         $emailService = Services::email();
         $emailService->setTo($email);
         $emailService->setSubject('Verify your email — Secure Cloud Document Manager');
         $emailService->setMailType('html');
-        $emailService->setMessage(EmailTemplate::render('Verify your email', $body, [
-            'label' => 'Verify email',
-            'url'   => rtrim(config('App')->frontendUrl, '/') . '/verify-email/' . $token,
-        ]));
+        $emailService->setMessage(EmailTemplate::renderVerification($name, $verifyUrl));
 
         try {
             if (! $emailService->send()) {
