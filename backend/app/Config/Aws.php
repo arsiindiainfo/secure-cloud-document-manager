@@ -35,6 +35,15 @@ class Aws extends BaseConfig
     /** Presigned URL lifetime, in seconds — 5 minutes per §10. */
     public int $presignTtlSeconds = 300;
 
+    /**
+     * SES's sending region can differ from where S3/EC2 live — the
+     * arsiindiainfo.com domain identity + DKIM are verified in ap-south-2,
+     * regardless of which region $region above points at. Falls back to
+     * $region when unset, so a single-region deployment needs no extra
+     * .env entry.
+     */
+    public string $sesRegion = '';
+
     public function __construct()
     {
         parent::__construct();
@@ -46,6 +55,7 @@ class Aws extends BaseConfig
         $this->documentsBucket   = (string) env('aws.documentsBucket', '');
         $this->spaBucket         = (string) env('aws.spaBucket', '');
         $this->presignTtlSeconds = (int) env('aws.presignTtlSeconds', 300);
+        $this->sesRegion         = (string) env('aws.sesRegion', '');
     }
 }
 

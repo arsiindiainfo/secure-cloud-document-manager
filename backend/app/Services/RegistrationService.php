@@ -13,8 +13,8 @@ use App\Constants\SuperAdmin;
 use App\Exceptions\RecaptchaFailedException;
 use App\Libraries\EmailTemplate;
 use App\Libraries\RecaptchaVerifier;
+use App\Libraries\SesMailer;
 use App\Models\UserModel;
-use Config\Services;
 
 /**
  * Public self-registration (§15) — the second way to get an account,
@@ -61,16 +61,11 @@ class RegistrationService
     private function sendVerificationEmail(string $email, string $name, string $token): void
     {
         $verifyUrl = rtrim(config('App')->frontendUrl, '/') . '/verify-email/' . $token;
-
-        $emailService = Services::email();
-        $emailService->setTo($email);
-        $emailService->setSubject('Verify your email — Secure Cloud Document Manager');
-        $emailService->setMailType('html');
-        $emailService->setMessage(EmailTemplate::renderVerification($name, $verifyUrl));
+        $html      = EmailTemplate::renderVerification($name, $verifyUrl);
 
         try {
-            if (! $emailService->send()) {
-                log_message('error', 'Failed to send verification email: ' . $emailService->printDebugger(['headers']));
+            if (! (new SesMailer())->send($email, 'Verify your email — Secure Cloud Document Manager', $html)) {
+                log_message('error', 'Failed to send verification email to ' . $email);
             }
         } catch (\Throwable $e) {
             log_message('error', 'Failed to send verification email: ' . $e->getMessage());
@@ -87,16 +82,12 @@ class RegistrationService
             . '<td style="padding: 4px 0; font-weight: 600; color: #0f172a;">' . esc($email, 'html') . '</td></tr>'
             . '</table>';
 
-        $emailService = Services::email();
-        $emailService->setTo(SuperAdmin::EMAIL);
-        $emailService->setSubject('New registration — Secure Cloud Document Manager');
-        $emailService->setMailType('html');
-        $emailService->setMessage(EmailTemplate::render('New registration', $body));
+        $html = EmailTemplate::render('New registration', $body);
 
         // Never blocks registration itself — this is a courtesy notice.
         try {
-            if (! $emailService->send()) {
-                log_message('error', 'Failed to send registration notification: ' . $emailService->printDebugger(['headers']));
+            if (! (new SesMailer())->send(SuperAdmin::EMAIL, 'New registration — Secure Cloud Document Manager', $html)) {
+                log_message('error', 'Failed to send registration notification for ' . $email);
             }
         } catch (\Throwable $e) {
             log_message('error', 'Failed to send registration notification: ' . $e->getMessage());

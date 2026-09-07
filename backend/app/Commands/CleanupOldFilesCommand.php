@@ -11,12 +11,12 @@ namespace App\Commands;
 
 use App\Libraries\EmailTemplate;
 use App\Libraries\S3Service;
+use App\Libraries\SesMailer;
 use App\Models\DocumentModel;
 use App\Models\DocumentVersionModel;
 use App\Models\UserModel;
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
-use Config\Services;
 use Throwable;
 
 /**
@@ -117,15 +117,11 @@ class CleanupOldFilesCommand extends BaseCommand
             . "<ul style=\"margin: 12px 0; padding-left: 20px;\">{$items}</ul>"
             . '<p style="color: #94a3b8;">This cannot be undone — re-upload if you still need any of them.</p>';
 
-        $emailService = Services::email();
-        $emailService->setTo($user->email);
-        $emailService->setSubject('Some of your files were removed — Secure Cloud Document Manager');
-        $emailService->setMailType('html');
-        $emailService->setMessage(EmailTemplate::render('Files removed (30-day retention policy)', $body));
+        $html = EmailTemplate::render('Files removed (30-day retention policy)', $body);
 
         try {
-            if (! $emailService->send()) {
-                log_message('error', 'Failed to send retention-cleanup email: ' . $emailService->printDebugger(['headers']));
+            if (! (new SesMailer())->send($user->email, 'Some of your files were removed — Secure Cloud Document Manager', $html)) {
+                log_message('error', 'Failed to send retention-cleanup email to ' . $user->email);
             }
         } catch (Throwable $e) {
             log_message('error', 'Failed to send retention-cleanup email: ' . $e->getMessage());

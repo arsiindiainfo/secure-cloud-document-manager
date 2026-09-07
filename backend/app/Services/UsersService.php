@@ -16,6 +16,7 @@ use App\Exceptions\IncorrectPasswordException;
 use App\Exceptions\UserHasContentException;
 use App\Exceptions\UserNotFoundException;
 use App\Libraries\EmailTemplate;
+use App\Libraries\SesMailer;
 use App\Models\AuditLogModel;
 use App\Models\RefreshTokenModel;
 use App\Models\UserModel;
@@ -183,23 +184,16 @@ class UsersService
             . '</table>'
             . '<p style="color: #94a3b8;">This is a demo account — change this password via a real reset flow in a production build.</p>';
 
-        $emailService = Services::email();
-        $emailService->setTo($email);
-        $emailService->setSubject('Your Secure Cloud Document Manager account');
-        $emailService->setMailType('html');
-        $emailService->setMessage(EmailTemplate::render('Welcome to Secure Cloud Document Manager', $body, [
+        $html = EmailTemplate::render('Welcome to Secure Cloud Document Manager', $body, [
             'label' => 'Sign in',
             'url'   => rtrim(config('App')->frontendUrl, '/') . '/login',
-        ]));
+        ]);
 
         // Delivery failure should not block the invite itself succeeding —
         // the ADMIN can still relay the temporary password out-of-band.
-        // CI4's Email::send() reports SMTP failures by returning false, not
-        // by throwing — a bare try/catch around it silently swallows those,
-        // so the return value has to be checked too.
         try {
-            if (! $emailService->send()) {
-                log_message('error', 'Failed to send invite email: ' . $emailService->printDebugger(['headers']));
+            if (! (new SesMailer())->send($email, 'Your Secure Cloud Document Manager account', $html)) {
+                log_message('error', 'Failed to send invite email to ' . $email);
             }
         } catch (\Throwable $e) {
             log_message('error', 'Failed to send invite email: ' . $e->getMessage());
