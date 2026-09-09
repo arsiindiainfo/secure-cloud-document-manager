@@ -177,9 +177,9 @@ class UsersService
         $body     = "<p>Hi {$safeName},</p>"
             . '<p>An account has been created for you on Secure Cloud Document Manager.</p>'
             . '<table role="presentation" cellpadding="0" cellspacing="0" style="margin: 16px 0; font-size: 14px;">'
-            . '<tr><td style="padding: 4px 12px 4px 0; color: #64748b;">Email</td>'
+            . '<tr><td style="padding: 4px 12px 4px 0; color: #64748b;">Email:&nbsp;</td>'
             . '<td style="padding: 4px 0; font-weight: 600; color: #0f172a;">' . esc($email, 'html') . '</td></tr>'
-            . '<tr><td style="padding: 4px 12px 4px 0; color: #64748b;">Temporary password</td>'
+            . '<tr><td style="padding: 4px 12px 4px 0; color: #64748b;">Temporary password:&nbsp;</td>'
             . '<td style="padding: 4px 0; font-weight: 600; color: #0f172a;">' . esc($temporaryPassword, 'html') . '</td></tr>'
             . '</table>'
             . '<p style="color: #94a3b8;">This is a demo account — change this password via a real reset flow in a production build.</p>';
