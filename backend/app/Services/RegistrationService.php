@@ -13,7 +13,7 @@ use App\Constants\SuperAdmin;
 use App\Exceptions\RecaptchaFailedException;
 use App\Libraries\EmailTemplate;
 use App\Libraries\RecaptchaVerifier;
-use App\Libraries\SesMailer;
+use App\Libraries\ResendMailer;
 use App\Models\UserModel;
 
 /**
@@ -64,7 +64,7 @@ class RegistrationService
         $html      = EmailTemplate::renderVerification($name, $verifyUrl);
 
         try {
-            if (! (new SesMailer())->send($email, 'Verify your email — Secure Cloud Document Manager', $html)) {
+            if (! (new ResendMailer())->send($email, 'Verify your email — Secure Cloud Document Manager', $html)) {
                 log_message('error', 'Failed to send verification email to ' . $email);
             }
         } catch (\Throwable $e) {
@@ -86,7 +86,7 @@ class RegistrationService
 
         // Never blocks registration itself — this is a courtesy notice.
         try {
-            if (! (new SesMailer())->send(SuperAdmin::EMAIL, 'New registration — Secure Cloud Document Manager', $html)) {
+            if (! (new ResendMailer())->send(SuperAdmin::EMAIL, 'New registration — Secure Cloud Document Manager', $html)) {
                 log_message('error', 'Failed to send registration notification for ' . $email);
             }
         } catch (\Throwable $e) {

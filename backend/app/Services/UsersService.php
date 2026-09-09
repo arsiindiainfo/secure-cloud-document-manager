@@ -16,7 +16,7 @@ use App\Exceptions\IncorrectPasswordException;
 use App\Exceptions\UserHasContentException;
 use App\Exceptions\UserNotFoundException;
 use App\Libraries\EmailTemplate;
-use App\Libraries\SesMailer;
+use App\Libraries\ResendMailer;
 use App\Models\AuditLogModel;
 use App\Models\RefreshTokenModel;
 use App\Models\UserModel;
@@ -192,7 +192,7 @@ class UsersService
         // Delivery failure should not block the invite itself succeeding —
         // the ADMIN can still relay the temporary password out-of-band.
         try {
-            if (! (new SesMailer())->send($email, 'Your Secure Cloud Document Manager account', $html)) {
+            if (! (new ResendMailer())->send($email, 'Your Secure Cloud Document Manager account', $html)) {
                 log_message('error', 'Failed to send invite email to ' . $email);
             }
         } catch (\Throwable $e) {

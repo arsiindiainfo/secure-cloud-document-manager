@@ -10,8 +10,8 @@
 namespace App\Commands;
 
 use App\Libraries\EmailTemplate;
+use App\Libraries\ResendMailer;
 use App\Libraries\S3Service;
-use App\Libraries\SesMailer;
 use App\Models\DocumentModel;
 use App\Models\DocumentVersionModel;
 use App\Models\UserModel;
@@ -120,7 +120,7 @@ class CleanupOldFilesCommand extends BaseCommand
         $html = EmailTemplate::render('Files removed (30-day retention policy)', $body);
 
         try {
-            if (! (new SesMailer())->send($user->email, 'Some of your files were removed — Secure Cloud Document Manager', $html)) {
+            if (! (new ResendMailer())->send($user->email, 'Some of your files were removed — Secure Cloud Document Manager', $html)) {
                 log_message('error', 'Failed to send retention-cleanup email to ' . $user->email);
             }
         } catch (Throwable $e) {
