@@ -68,6 +68,7 @@ class ResendMailer
             'to'      => [$to],
             'subject' => $subject,
             'html'    => $html,
+            'text'    => $this->toPlainText($html),
         ];
 
         $ch = curl_init('https://api.resend.com/emails');
@@ -95,5 +96,24 @@ class ResendMailer
         }
 
         return true;
+    }
+
+    /**
+     * A missing text/plain part is itself a spam signal — HTML-only email
+     * reads as marketing-only to most filters. Good enough approximation
+     * for our own templated markup; doesn't need to be pixel-perfect.
+     */
+    private function toPlainText(string $html): string
+    {
+        $text = preg_replace('#<(style|script)\b[^>]*>.*?</\1>#is', '', $html);
+        $text = preg_replace('#<(br|/p|/div|/tr|/h[1-6]|/li)\s*/?>#i', "\n", $text);
+        $text = preg_replace('#</td>#i', "  ", $text);
+        $text = strip_tags($text);
+        $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+        $text = preg_replace('/[ \t]+/', ' ', $text);
+        $text = preg_replace('/\n[ \t]*/', "\n", $text);
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+
+        return trim($text);
     }
 }
