@@ -52,7 +52,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
       <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <BrandLogo className="mb-4 h-10" />
+        <BrandLogo className="mb-4 h-16" />
         <h1 className="mb-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
           Secure Cloud Document Manager
         </h1>

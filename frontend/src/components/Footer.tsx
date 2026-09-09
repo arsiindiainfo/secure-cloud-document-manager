@@ -89,7 +89,7 @@ export function Footer() {
 
         <div className="max-w-sm py-4 lg:px-6">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            Need a custom document management system for your business?
+            Need a custom solution for your business?
           </h3>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             This demo shows what we can build for you. Let&apos;s build it together &mdash; custom development and

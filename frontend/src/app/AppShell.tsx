@@ -68,7 +68,7 @@ export function AppShell() {
         >
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 dark:border-slate-700">
             <Link to="/browse" onClick={() => setMobileNavOpen(false)}>
-              <BrandLogo className="h-10" />
+              <BrandLogo className="h-14" />
             </Link>
             <button
               type="button"
