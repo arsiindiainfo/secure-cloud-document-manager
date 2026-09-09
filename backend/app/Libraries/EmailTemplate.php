@@ -70,8 +70,15 @@ class EmailTemplate
     /**
      * Registration verification email — unlike render(), this doesn't share
      * the minimal one-card shell (used for admin notices and cron reports):
-     * it follows the richer, marketing-style layout the other two demo
-     * portfolio apps also use, cross-promoting all three live demos.
+     * it keeps the same header/hero visual polish, but stays purely
+     * transactional (verify button + the one fact relevant to activating
+     * an account). An earlier version bundled in 3 cross-promotional demo
+     * cards and a "hire me" sales pitch — that shape (many outbound links
+     * to different domains, marketing language, in a supposed
+     * verify-your-email message) reads as spam to content filters
+     * independent of sender authentication, and was landing in spam even
+     * for brand-new recipients. Demo cross-promotion belongs in a
+     * separate, later email — not the one gating account access.
      */
     public static function renderVerification(string $name, string $verifyUrl): string
     {
@@ -79,29 +86,6 @@ class EmailTemplate
         $safeUrl  = esc($verifyUrl, 'attr');
         $year     = date('Y');
         $logoUrl  = 'https://www.arsiindiainfo.com/assets/images/logo-horizontal.png';
-
-        $demoCards = self::demoCard(
-            'DEMO 01',
-            '#1769e8',
-            'React + PHP SaaS CRM',
-            'CRM &middot; SaaS &middot; Business Application',
-            'A small-business CRM for companies, contacts, leads, conversion workflows, deal pipelines, tasks, activity timelines, dashboards and reports &mdash; built with React, PHP CodeIgniter 4 and MySQL.',
-            'https://demo.arsiindiainfo.com/',
-        ) . self::demoCard(
-            'DEMO 02',
-            '#16a36a',
-            'Email Campaign &amp; Delivery Tracking Platform',
-            'Marketing Automation &middot; Email &middot; Cloud',
-            'A campaign delivery and tracking platform covering contact lists, templates, a multi-step campaign wizard, queued delivery, suppressions and delivery/click tracking &mdash; built with React, NestJS and MongoDB.',
-            'https://demo1.arsiindiainfo.com/',
-        ) . self::demoCard(
-            'DEMO 03',
-            '#8b55d9',
-            'Secure Cloud Document Manager',
-            'Cloud &middot; Document Management &middot; Security',
-            'A Dropbox-style business document manager with folders, versioned documents, internal permission grants, expiring external share links and private, signed-URL S3 storage &mdash; built with React, PHP CodeIgniter 4 and MySQL.',
-            'https://demo2.arsiindiainfo.com/',
-        );
 
         return <<<HTML
             <!DOCTYPE html>
@@ -113,7 +97,7 @@ class EmailTemplate
             </head>
             <body style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#14213d;">
               <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
-                Verify your Arsi India Info demo account and explore three practical business software platforms.
+                Verify your email address to activate your Secure Cloud Document Manager account.
               </div>
 
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f7fb;">
@@ -188,72 +172,6 @@ class EmailTemplate
                         </td>
                       </tr>
 
-                      <!-- Demo introduction -->
-                      <tr>
-                        <td style="padding:30px 36px 10px;">
-                          <h2 style="margin:0 0 10px;font-size:21px;color:#14213d;">
-                            Explore our live demos
-                          </h2>
-                          <p style="margin:0 0 22px;font-size:14px;line-height:1.7;color:#66758b;">
-                            These three demo applications showcase practical SaaS, marketing automation and secure cloud solutions. They are created and maintained by
-                            <strong style="color:#14213d;">Rajib Majumder</strong> of Arsi India Info
-                            to demonstrate practical business software solutions.
-                          </p>
-                        </td>
-                      </tr>
-
-                      <!-- Demo cards -->
-                      <tr>
-                        <td style="padding:0 36px 28px;">
-                          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                            {$demoCards}
-                          </table>
-                        </td>
-                      </tr>
-
-                      <!-- Support -->
-                      <tr>
-                        <td style="padding:30px 36px;background:#f7faff;border-top:1px solid #e9eff7;">
-                          <h2 style="margin:0 0 9px;font-size:20px;color:#14213d;">
-                            Need a portal or eCommerce solution?
-                          </h2>
-
-                          <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#66758b;">
-                            Rajib Majumder / Arsi India Info can help with custom business portals,
-                            SaaS applications, eCommerce websites, integrations, APIs and ongoing technical support.
-                          </p>
-
-                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                            <tr>
-                              <td style="padding-right:8px;">
-                                <a href="mailto:arsi.india.info@gmail.com"
-                                   style="display:inline-block;padding:11px 14px;border:1px solid #dbe5f2;border-radius:8px;background:#ffffff;color:#1769e8;text-decoration:none;font-size:13px;font-weight:700;">
-                                  Email Support
-                                </a>
-                              </td>
-                              <td style="padding-right:8px;">
-                                <a href="https://wa.me/919433796101"
-                                   style="display:inline-block;padding:11px 14px;border:1px solid #dbe5f2;border-radius:8px;background:#ffffff;color:#159447;text-decoration:none;font-size:13px;font-weight:700;">
-                                  WhatsApp
-                                </a>
-                              </td>
-                              <td>
-                                <a href="https://www.upwork.com/freelancers/~0172bf8ee328825a5a?mp_source=share"
-                                   style="display:inline-block;padding:11px 14px;border:1px solid #dbe5f2;border-radius:8px;background:#ffffff;color:#14a800;text-decoration:none;font-size:13px;font-weight:700;">
-                                  Hire on Upwork
-                                </a>
-                              </td>
-                            </tr>
-                          </table>
-
-                          <p style="margin:17px 0 0;font-size:13px;line-height:1.6;color:#718096;">
-                            WhatsApp: <strong>+91 94337 96101</strong><br>
-                            Email: <a href="mailto:arsi.india.info@gmail.com" style="color:#1769e8;text-decoration:none;">arsi.india.info@gmail.com</a><br>
-                            Website: <a href="https://arsiindiainfo.com/contact" style="color:#1769e8;text-decoration:none;">Contact Arsi India Info</a>
-                          </p>
-                        </td>
-                      </tr>
-
                       <!-- Footer -->
                       <tr>
                         <td style="padding:24px 36px;text-align:center;background:#ffffff;">
@@ -279,33 +197,4 @@ class EmailTemplate
             HTML;
     }
 
-    private static function demoCard(
-        string $number,
-        string $accent,
-        string $title,
-        string $category,
-        string $description,
-        string $url,
-    ): string {
-        return <<<HTML
-            <tr>
-              <td style="padding:17px 18px;border:1px solid #e5ebf3;border-radius:12px;background:#fbfdff;">
-                <div style="font-size:13px;font-weight:800;color:{$accent};">{$number}</div>
-                <div style="margin-top:5px;font-size:16px;font-weight:700;color:#182b49;">
-                  {$title}
-                </div>
-                <div style="margin-top:5px;font-size:11px;font-weight:700;letter-spacing:.2px;color:{$accent};">
-                  {$category}
-                </div>
-                <div style="margin-top:7px;font-size:13px;line-height:1.55;color:#718096;">
-                  {$description}
-                </div>
-                <a href="{$url}" style="display:inline-block;margin-top:10px;color:#1769e8;font-size:13px;font-weight:700;text-decoration:none;">
-                  View Live Demo →
-                </a>
-              </td>
-            </tr>
-            <tr><td height="10" style="font-size:0;line-height:0;">&nbsp;</td></tr>
-            HTML;
-    }
 }
